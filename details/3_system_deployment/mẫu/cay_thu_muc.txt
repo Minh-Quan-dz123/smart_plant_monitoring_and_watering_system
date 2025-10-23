@@ -1,0 +1,77 @@
+hospital-microservice/                 # Root project
+├─ frontend/
+│  ├─ UI/                               # Presentation layer
+│  │  ├─ pages/
+│  │  │   ├─ PatientPage.jsx
+│  │  │   ├─ DoctorPage.jsx
+│  │  │   └─ AppointmentPage.jsx
+│  │  ├─ components/
+│  │  │   ├─ PatientForm.jsx
+│  │  │   ├─ DoctorForm.jsx
+│  │  │   └─ AppointmentForm.jsx
+│  │  ├─ routes/
+│  │  │   └─ appRoutes.js
+│  │  └─ assets/                        # images, css, icons, ...
+│  │
+│  ├─ API/                               # API layer
+│  │  └─ services/
+│  │      ├─ patientService.js           # gọi API backend
+│  │      ├─ doctorService.js
+│  │      └─ appointmentService.js
+│  │
+│  ├─ store/                             # global state management
+│  ├─ config/                            # frontend configs
+│  └─ utils/                             # helper functions
+│
+├─ backend/
+│  ├─ patient-service/
+│  │  ├─ src/
+│  │  │  ├─ tầng 1/                      # Presentation Layer
+│  │  │  │   ├─ controllers/
+│  │  │  │   │   └─ patientController.js
+│  │  │  │   └─ routes/
+│  │  │  │       └─ patientRoutes.js
+│  │  │  │
+│  │  │  ├─ tầng 2/                      # Service Layer
+│  │  │  │   ├─ services/
+│  │  │  │   │   └─ patientService.js
+│  │  │  │   └─ dto/
+│  │  │  │       └─ patientDTO.js
+│  │  │  │
+│  │  │  ├─ tầng 2.5/                    # Integration Layer
+│  │  │  │   ├─ client/
+│  │  │  │   │   ├─ externalHospitalClient.js
+│  │  │  │   │   └─ exception.js
+│  │  │  │   └─ translator/
+│  │  │  │       ├─ adapter.js
+│  │  │  │       └─ externalPatientDTO.js
+│  │  │  │
+│  │  │  ├─ tầng 3/                      # Data Access Layer
+│  │  │  │   ├─ repository/
+│  │  │  │   │   └─ patientRepository.js
+│  │  │  │   └─ database/                # migration, seeds, ...
+│  │  │  │
+│  │  │  └─ entity/
+│  │  │      └─ patient.js               # Entity/Schema giữa tầng 2-3
+│  │  │
+│  │  ├─ config/                         # service config
+│  │  └─ utils/                          # helper functions
+│  │
+│  ├─ doctor-service/
+│  │  └─ src/ ... (tương tự patient-service)
+│  │
+│  ├─ appointment-service/
+│  │  └─ src/ ... (tương tự patient-service)
+│  │
+│  └─ billing-service/
+│     └─ src/ ... (tương tự patient-service)
+│
+├─ api-gateway/
+│  ├─ src/
+│  │   └─ gateway.js
+│  ├─ package.json
+│  └─ .env
+│
+├─ docker-compose.yml
+├─ README.md
+└─ .gitignore
