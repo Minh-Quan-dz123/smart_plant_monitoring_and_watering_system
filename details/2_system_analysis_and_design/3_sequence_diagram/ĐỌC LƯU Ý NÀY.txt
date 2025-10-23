@@ -1,0 +1,12 @@
+biểu đồ sequence có 3 mức 0-1-2:
+- mức 0 thể hiện logic hoạt động ví dụ: user ->hệ thống -> database, devices
+- mức 1 thể hiện kiến trúc tương tác với nhau trong 1 chức năng:
+  ví dụ: user -> frontend(UI) -> backend(control->service->database) -> HiveMQ ->nhúng(control ->service)
+- mức 2 thể hiện chi tiết hơn cả mức 1, dữ liệu sẽ di qua các package trong 1 tầng của 1 thành phần,   còn thể hiện các package sẽ gọi hàm gì (tên hàm) tới package của tầng tiếp theo
+=> sequence mức 2 cho biết trong 1 package có những file gì, file này chứa hàm gì, phục vụ cho chức năng gì
+Front end thì chỉ vẽ sequence cho frontend, ví dụ (user ->Frontend/UI->Frontend/control->backend).
+back end thì chi vẽ sequence cho backend, ví dụ (frontend -> control->service->gateway->HiveMQ)
+tương tự với nhúng
+
+về mặt thống nhất tên API (với HTTP) hay tên topic (với MQTT) thì ko cần lo lắng, dễ dàng xử lý sau khi vẽ xong
+LƯU Y sequence 5-6 chưa cần vẽ vì nó chưa quan trọng
