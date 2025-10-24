@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <ImageView
+        android:id="@+id/img_rounded"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/rounded_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/icon_back"
+        app:layout_constraintBottom_toBottomOf="@+id/img_rounded"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="24dp"
+        android:padding="2dp"
+        android:src="@drawable/icon_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/img_rounded" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/img_temperature"
+        app:layout_constraintStart_toStartOf="@+id/img_temperature"
+        app:layout_constraintTop_toBottomOf="@+id/img_temperature">
+
+        <TextView
+            android:id="@+id/tv_result_tempe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_25"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_tempeC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/_176_c"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_tempe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tempe"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout"
+        app:layout_constraintStart_toStartOf="@+id/lin_layout"
+        app:layout_constraintTop_toBottomOf="@+id/lin_layout" />
+
+    <TextView
+        android:id="@+id/tv_name_crop"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:gravity="center"
+        android:text="@string/tomato"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/icon_back"
+        app:layout_constraintEnd_toStartOf="@+id/img_menu"
+        app:layout_constraintStart_toEndOf="@+id/icon_back"
+        app:layout_constraintTop_toTopOf="@+id/icon_back" />
+
+    <ImageView
+        android:id="@+id/img_menu"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="10dp"
+        android:src="@drawable/icon_more"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_name_crop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_name_crop" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_crop"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/img_rounded">
+
+        <ImageView
+            android:id="@+id/img_crop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/img_tomato" />
+    </androidx.cardview.widget.CardView>
+
+
+    <ImageView
+        android:id="@+id/img_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_tempe"
+        app:layout_constraintStart_toStartOf="@+id/cv_crop"
+        app:layout_constraintTop_toBottomOf="@+id/cv_crop" />
+
+    <ImageView
+        android:id="@+id/img_humidity"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_humidity"
+        app:layout_constraintEnd_toStartOf="@+id/img_soil"
+        app:layout_constraintStart_toEndOf="@+id/img_temperature"
+        app:layout_constraintTop_toTopOf="@id/img_temperature" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout_humidity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/img_humidity"
+        app:layout_constraintStart_toStartOf="@+id/img_humidity"
+        app:layout_constraintTop_toBottomOf="@+id/img_humidity">
+
+        <TextView
+            android:id="@+id/tv_result_humidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_62"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_hu_per"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/per"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_humidity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/humidity"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout_humidity"
+        app:layout_constraintStart_toStartOf="@+id/lin_layout_humidity"
+        app:layout_constraintTop_toBottomOf="@+id/lin_layout_humidity" />
+
+    <ImageView
+        android:id="@+id/img_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="35dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_soil"
+        app:layout_constraintEnd_toEndOf="@+id/cv_crop"
+        app:layout_constraintTop_toBottomOf="@+id/cv_crop" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/img_soil"
+        app:layout_constraintStart_toStartOf="@+id/img_soil"
+        app:layout_constraintTop_toBottomOf="@+id/img_soil">
+
+        <TextView
+            android:id="@+id/tv_result_soil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_62"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_soil_per"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/per"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/soil"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout_soil"
+        app:layout_constraintStart_toStartOf="@+id/lin_layout_soil"
+        app:layout_constraintTop_toBottomOf="@+id/lin_layout_soil" />
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_bgr"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="20dp"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/img_tree"
+        app:layout_constraintDimensionRatio="w,5:2"
+        app:layout_constraintStart_toStartOf="@+id/cv_crop"
+        app:layout_constraintTop_toBottomOf="@+id/tv_name_tempe"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp" />
+
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:text="@string/_30_ph_t"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/cv_bgr"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintStart_toStartOf="@+id/cv_bgr"
+        app:layout_constraintTop_toTopOf="@+id/cv_bgr" />
+
+    <TextView
+        android:id="@+id/tv_des_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:text="@string/next_watering"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/cv_bgr"
+        app:layout_constraintStart_toStartOf="@+id/tv_time"
+        app:layout_constraintTop_toBottomOf="@+id/tv_time" />
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_bgr_2"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginEnd="20dp"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/img_tree"
+        app:layout_constraintDimensionRatio="w,5:2"
+        app:layout_constraintEnd_toEndOf="@+id/cv_crop"
+        app:layout_constraintTop_toBottomOf="@+id/tv_name_tempe"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp" />
+
+    <TextView
+        android:id="@+id/tv_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:text="@string/_00_00"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/cv_bgr_2"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintStart_toStartOf="@+id/cv_bgr_2"
+        app:layout_constraintTop_toTopOf="@+id/cv_bgr_2" />
+
+    <TextView
+        android:id="@+id/tv_des_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:text="@string/count_down"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/cv_bgr_2"
+        app:layout_constraintStart_toStartOf="@+id/tv_count"
+        app:layout_constraintTop_toBottomOf="@+id/tv_count" />
+
+
+    <ImageView
+        android:id="@+id/img_tree"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="20dp"
+        android:padding="2dp"
+        android:src="@drawable/icon_tree"
+        app:layout_constraintBottom_toTopOf="@+id/img_1"
+        app:layout_constraintStart_toStartOf="@+id/cv_bgr" />
+
+    <TextView
+        android:id="@+id/tv_state"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="@string/state_sprinkler"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/img_tree"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.073"
+        app:layout_constraintStart_toEndOf="@+id/img_tree"
+        app:layout_constraintTop_toTopOf="@+id/img_tree" />
+
+    <ImageView
+        android:id="@+id/img_1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/rounded_bgr_crops"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_percent="0.18"
+        app:layout_constraintStart_toStartOf="@+id/cv_crop"
+        app:layout_constraintWidth_percent="0.26"
+        tools:layout_editor_absoluteX="44dp" />
+
+    <ImageView
+        android:id="@+id/img_2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/rounded_bgr_crops"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/cv_crop"
+        app:layout_constraintHeight_percent="0.18"
+        app:layout_constraintWidth_percent="0.26" />
+
+    <ImageView
+        android:id="@+id/img_3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/rounded_bgr_crops"
+        app:layout_constraintBottom_toBottomOf="@+id/img_1"
+        app:layout_constraintEnd_toStartOf="@+id/img_2"
+        app:layout_constraintHeight_percent="0.18"
+        app:layout_constraintStart_toEndOf="@+id/img_1"
+        app:layout_constraintTop_toTopOf="@+id/img_1"
+        app:layout_constraintWidth_percent="0.26" />
+
+    <ImageView
+        android:id="@+id/img_Sprinkler"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/icon_sprinkler"
+        app:layout_constraintEnd_toEndOf="@+id/img_1"
+        app:layout_constraintHeight_percent="0.1"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/img_1"
+        app:layout_constraintTop_toTopOf="@+id/img_1"
+        app:layout_constraintWidth_percent="0.20" />
+
+    <TextView
+        android:id="@+id/tv_Sprinkler"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/Sprinkler"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/img_Sprinkler"
+        app:layout_constraintStart_toStartOf="@+id/img_Sprinkler"
+        app:layout_constraintTop_toBottomOf="@+id/img_Sprinkler"
+        tools:layout_editor_absoluteX="29dp" />
+
+    <ImageView
+        android:id="@+id/img_setting"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/icon_setting"
+        app:layout_constraintEnd_toEndOf="@+id/img_3"
+        app:layout_constraintHeight_percent="0.1"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/img_3"
+        app:layout_constraintTop_toTopOf="@+id/img_3"
+        app:layout_constraintWidth_percent="0.20" />
+
+    <TextView
+        android:id="@+id/tv_setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/setting"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/img_setting"
+        app:layout_constraintStart_toStartOf="@+id/img_setting"
+        app:layout_constraintTop_toBottomOf="@+id/img_setting" />
+
+    <ImageView
+        android:id="@+id/img_info"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/icon_doc"
+        app:layout_constraintEnd_toEndOf="@+id/img_2"
+        app:layout_constraintHeight_percent="0.1"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/img_2"
+        app:layout_constraintTop_toTopOf="@+id/img_2"
+        app:layout_constraintWidth_percent="0.20" />
+
+    <TextView
+        android:id="@+id/tv_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/infor_crop"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/img_info"
+        app:layout_constraintStart_toStartOf="@+id/img_info"
+        app:layout_constraintTop_toBottomOf="@+id/img_info" />
+</androidx.constraintlayout.widget.ConstraintLayout>

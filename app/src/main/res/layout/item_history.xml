@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp">
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/time_history"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.8" />
+
+    <ImageView
+        android:id="@+id/img_dot1"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded_dot"
+        app:layout_constraintStart_toStartOf="@+id/tv_date"
+        app:layout_constraintTop_toBottomOf="@+id/tv_date" />
+
+    <TextView
+        android:id="@+id/tv_thoigian"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/th_i_gian_06_45"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/img_dot1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/img_dot1"
+        app:layout_constraintTop_toTopOf="@+id/img_dot1" />
+
+    <ImageView
+        android:id="@+id/img_dot2"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded_dot"
+        app:layout_constraintStart_toStartOf="@+id/img_dot1"
+        app:layout_constraintTop_toBottomOf="@+id/img_dot1" />
+
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/th_i_gian_t_i_10s"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/img_dot2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/img_dot2"
+        app:layout_constraintTop_toTopOf="@+id/img_dot2" />
+
+    <ImageView
+        android:id="@+id/img_dot3"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded_dot"
+        app:layout_constraintStart_toStartOf="@+id/img_dot2"
+        app:layout_constraintTop_toBottomOf="@+id/img_dot2" />
+
+    <TextView
+        android:id="@+id/value_water"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:text="@string/l_ng_n_c_2l"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/img_dot3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/img_dot3"
+        app:layout_constraintTop_toTopOf="@+id/img_dot3" />
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="5dp"
+        android:background="#3DE6D1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/value_water"
+        app:layout_constraintWidth_percent="0.8" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
