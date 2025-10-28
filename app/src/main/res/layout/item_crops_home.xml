@@ -1,6 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:elevation="4dp">
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/c_view"
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_margin="4dp"
+        app:cardCornerRadius="25dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp">
+
+        <ImageView
+            android:id="@+id/img_bgr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bgr_crops" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tv_name_crops"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="15dp"
+        android:text="@string/tomato"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/c_view"
+        app:layout_constraintTop_toTopOf="@+id/c_view" />
+
+    <ImageView
+        android:id="@+id/img_icon_out"
+        android:layout_width="48dp"
+        android:layout_height="48sp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="6dp"
+        android:src="@drawable/icon_arrow_out"
+        app:layout_constraintEnd_toEndOf="@+id/c_view"
+        app:layout_constraintHorizontal_bias="0.9"
+        app:layout_constraintStart_toEndOf="@+id/tv_name_crops"
+        app:layout_constraintTop_toTopOf="@+id/c_view" />
+
+    <ImageView
+        android:id="@+id/img_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_tempe"
+        app:layout_constraintBottom_toTopOf="@+id/lin_layout"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout"
+        app:layout_constraintStart_toStartOf="@+id/lin_layout" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/tv_name_tempe"
+        app:layout_constraintEnd_toEndOf="@+id/tv_name_tempe"
+        app:layout_constraintStart_toStartOf="@+id/tv_name_tempe">
+
+        <TextView
+            android:id="@+id/tv_result_tempe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_25"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_tempeC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/_176_c"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_tempe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/tempe"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/c_view"
+        app:layout_constraintStart_toStartOf="@+id/c_view" />
+
+    <ImageView
+        android:id="@+id/img_humidity"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_humidity"
+        app:layout_constraintBottom_toBottomOf="@+id/img_temperature"
+        app:layout_constraintEnd_toStartOf="@+id/img_soil"
+        app:layout_constraintStart_toEndOf="@+id/img_temperature"
+        app:layout_constraintTop_toTopOf="@+id/img_temperature" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout_humidity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/img_humidity"
+        app:layout_constraintStart_toStartOf="@+id/img_humidity"
+        app:layout_constraintTop_toBottomOf="@+id/img_humidity">
+
+        <TextView
+            android:id="@+id/tv_result_humidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_62"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_hu_per"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/per"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_humidity"
+        android:layout_width="0dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="10dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/humidity"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout_humidity"
+        app:layout_constraintStart_toEndOf="@+id/tv_name_tempe"
+        app:layout_constraintEnd_toStartOf="@+id/tv_name_soil"
+        app:layout_constraintTop_toBottomOf="@+id/lin_layout_humidity" />
+
+    <ImageView
+        android:id="@+id/img_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="@drawable/rounded_bgr"
+        android:padding="8dp"
+        android:src="@drawable/icon_soil"
+        app:layout_constraintBottom_toTopOf="@+id/lin_layout_soil"
+        app:layout_constraintEnd_toEndOf="@+id/lin_layout_soil"
+        app:layout_constraintStart_toStartOf="@+id/lin_layout_soil" />
+
+    <LinearLayout
+        android:id="@+id/lin_layout_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/tv_name_soil"
+        app:layout_constraintEnd_toEndOf="@+id/tv_name_soil"
+        app:layout_constraintStart_toStartOf="@+id/tv_name_soil">
+
+        <TextView
+            android:id="@+id/tv_result_soil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:text="@string/_62"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tv_soil_per"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:text="@string/per"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_name_soil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/soil"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/c_view"
+        app:layout_constraintEnd_toEndOf="@+id/c_view" />
 </androidx.constraintlayout.widget.ConstraintLayout>

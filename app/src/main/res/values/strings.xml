@@ -73,4 +73,5 @@
     <string name="name_sensor">HKT04</string>
     <string name="schedule_water_tree">16/10/2025-16:15-10s-hàng tuần</string>
     <string name="note">* Khi không có lịch cây sẽ được tưới tự động theo chu kỳ sinh học của cây</string>
+    <string name="des_add_crops">Thêm cây của bạn</string>
 </resources>

@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.project_iot_auto_watering.R
 import com.example.project_iot_auto_watering.databinding.FragmentSplashBinding
+import com.example.project_iot_auto_watering.util.NavOption
+import com.example.project_iot_auto_watering.util.checkOpenAppFirst
 
 class FragmentSplash : Fragment(), View.OnClickListener {
     private var _binding: FragmentSplashBinding? = null
@@ -25,16 +27,25 @@ class FragmentSplash : Fragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-       initListener()
+        val prefs = checkOpenAppFirst(requireContext())
+        if (prefs) {
+            findNavController().navigate(
+                R.id.action_splashFragment_to_fragmentLogin,
+                null,
+                NavOption.animationFragment
+            )
+        }
+
+        initListener()
     }
 
-    private fun initListener(){
+    private fun initListener() {
         binding.tvStart.setOnClickListener(this)
     }
 
     override fun onClick(p0: View?) {
-        when(p0?.id){
-            R.id.tv_start ->{
+        when (p0?.id) {
+            R.id.tv_start -> {
                 findNavController().navigate(R.id.action_splashFragment_to_fragmentLogin)
             }
         }

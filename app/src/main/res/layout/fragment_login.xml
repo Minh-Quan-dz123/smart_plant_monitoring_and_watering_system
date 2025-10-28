@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@drawable/groundlogin"
+        android:background="@drawable/bgr_auth"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,7 +35,7 @@
             android:layout_marginStart="50dp"
             android:layout_marginTop="30dp"
             android:text="@string/login"
-            android:textColor="#79ED7A"
+            android:textColor="#FFFFFF"
             android:textSize="40sp"
             android:textStyle="bold" />
 
@@ -75,9 +75,10 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
             android:text="@string/forgot_password"
-            android:textColor="#0505E6"
+            android:textColor="#094E1C"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="RtlHardcoded" />
 
         <TextView
             android:id="@+id/login"
@@ -156,7 +157,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="64dp"
         android:text="@string/hello_nwelcome_to_likeu"
-        android:textColor="@color/white"
+        android:textColor="#15A634"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="@+id/roundedImageView"
         app:layout_constraintHorizontal_bias="0.236"

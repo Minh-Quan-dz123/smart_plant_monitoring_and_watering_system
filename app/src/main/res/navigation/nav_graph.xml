@@ -23,7 +23,7 @@
             app:destination="@id/fragmentSignUp" />
         <action
             android:id="@+id/action_fragmentLogin_to_fragmentHome"
-            app:destination="@id/fragmentHome" />
+            app:destination="@id/fragmentHomeContainer" />
     </fragment>
     <fragment
         android:id="@+id/fragmentSignUp"
@@ -34,37 +34,15 @@
             android:id="@+id/action_fragmentSignUp_to_fragmentLogin"
             app:destination="@id/fragmentLogin" />
     </fragment>
-    <fragment android:id="@+id/fragmentSensor"
-        android:name="com.example.project_iot_auto_watering.ui.sensor.FragmentSensor"
-        android:label="Fragment Sensor">
 
-        <action
-            android:id="@+id/action_fragmentSensor_to_fragmentHome"
-            app:destination="@id/fragmentHome" />
-    </fragment>
-    <fragment android:id="@+id/fragmentHome"
-        android:name="com.example.project_iot_auto_watering.ui.home.FragmentHome"
-        android:label="Fragment Home">
+    <fragment
+        android:id="@+id/fragmentHomeContainer"
+        android:name="com.example.project_iot_auto_watering.ui.home.HomeContainerFragment"
+        android:label="Fragment Home Container">
 
-        <action
-            android:id="@+id/action_fragmentHome_to_fragmentMore"
-            app:destination="@id/fragmentMore" />
-        <action
-            android:id="@+id/action_fragmentHome_to_fragmentSensor"
-            app:destination="@id/fragmentSensor" />
-        <action
-            android:id="@+id/action_fragmentHome_to_fragmentCrops"
-            app:destination="@id/fragmentCrops" />
     </fragment>
-    <fragment android:id="@+id/fragmentMore"
-        android:name="com.example.project_iot_auto_watering.ui.more.FragmentMore"
-        android:label="Fragment Label">
-
-        <action
-            android:id="@+id/action_fragmentMore_to_fragmentHome"
-            app:destination="@id/fragmentHome" />
-    </fragment>
-    <fragment android:id="@+id/fragmentHistory"
+    <fragment
+        android:id="@+id/fragmentHistory"
         android:name="com.example.project_iot_auto_watering.ui.history.FragmentHistory"
         android:label="Fragment History">
 
@@ -72,7 +50,8 @@
             android:id="@+id/action_fragmentHistory_to_fragmentCrops"
             app:destination="@id/fragmentCrops" />
     </fragment>
-    <fragment android:id="@+id/fragmentCrops"
+    <fragment
+        android:id="@+id/fragmentCrops"
         android:name="com.example.project_iot_auto_watering.ui.crops.FragmentCrops"
         android:label="Fragment Crops">
 
@@ -81,12 +60,13 @@
             app:destination="@id/fragmentDocument" />
         <action
             android:id="@+id/action_fragmentCrops_to_fragmentHome"
-            app:destination="@id/fragmentHome" />
+            app:destination="@id/fragmentHomeContainer" />
         <action
             android:id="@+id/action_fragmentCrops_to_fragmentHistory"
             app:destination="@id/fragmentHistory" />
     </fragment>
-    <fragment android:id="@+id/fragmentDocument"
+    <fragment
+        android:id="@+id/fragmentDocument"
         android:name="com.example.project_iot_auto_watering.ui.document.FragmentDocument"
         android:label="Fragment Document">
 
