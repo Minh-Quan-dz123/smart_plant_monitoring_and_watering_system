@@ -16,12 +16,12 @@ export class MqttService implements OnModuleInit {
     });
 
     this.client.on('connect', () => {
-      console.log('✅ Connected to HiveMQ!');
+      console.log(' Connected to HiveMQ!');
       this.client.subscribe('iot/sensor/temperature');
     });
 
     this.client.on('message', (topic, message) => {
-      console.log(`📩 [${topic}]: ${message.toString()}`);
+      console.log(` [${topic}]: ${message.toString()}`);
     });
   }
 
