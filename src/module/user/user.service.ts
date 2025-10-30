@@ -21,6 +21,7 @@ export class UserService {
         plaintPassword: string,
         hashedPassword: string,
     ): Promise<boolean> {
+        console.log(plaintPassword, hashedPassword);
         return await bcrypt.compare(plaintPassword,hashedPassword)
     }
 
@@ -34,8 +35,9 @@ export class UserService {
                 data: {
                     email,
                     password: hashedPassword,
+                    username,
                     role: {
-                      connect: { name: 'USER'},
+                      connect: { name:roles || 'USER'},
                      }
                 },
             });
@@ -140,4 +142,3 @@ export class UserService {
     }
   }
 }
-

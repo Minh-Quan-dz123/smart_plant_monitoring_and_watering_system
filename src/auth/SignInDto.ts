@@ -6,7 +6,7 @@ export class SignInDto {
     message: 'email not valid',
   })
   email: string;
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/, {
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, {
     message: 'password not valid',
   })
   @IsNotEmpty({ message: 'password not Empty' })

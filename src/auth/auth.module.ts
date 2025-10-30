@@ -25,7 +25,7 @@ import { UserService } from 'src/module/user/user.service';
           secret: configService.get<string>('JWT_SECRET'),
           signOptions: {
             expiresIn:
-              parseInt(configService.get<string>('JWT_EXPIRES')!, 10) / 1000,
+              parseInt(configService.get<string>('JWT_EXPIRES') || '1h'),
           }
         })
      }),

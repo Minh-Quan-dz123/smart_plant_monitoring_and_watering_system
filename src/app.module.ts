@@ -7,9 +7,10 @@ import { UserModule } from 'src/module/user/user.module';
 import { GardenModule } from './garden/garden.module';
 import { SensorModule } from './sensor/sensor.module';
 import { IrrigationModule } from './irrigation/irrigation.module';
+import { PlantModule } from './module/plant/plant.module';
 
 @Module({
-  imports: [AuthModule, UserModule, GardenModule, SensorModule, IrrigationModule],
+  imports: [AuthModule, UserModule, GardenModule, SensorModule, IrrigationModule, PlantModule],
   controllers: [AppController],
   providers: [AppService],
 })
