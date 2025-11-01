@@ -1,2 +1,0 @@
-1: người dùng chọn chế độ tưới cây theo lịch cố đinh, sau đó điền thông tin (chu kì tưới, thời gian mỗi lần tưới)
-2: mỗi lần chuyển từ chế độ tưới cây khác sang chế độ này thì hệ thống sẽ check xem trươc đó đã có thông tin sẵn chưa, chưa thì bắt buộc người dùng phải điền (chu kì tưới cây, thời gian mỗi lần tưới)
