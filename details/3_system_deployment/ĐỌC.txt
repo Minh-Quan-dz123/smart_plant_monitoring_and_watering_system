@@ -1,6 +1,0 @@
-Sơ  đồ kiến trúc có 2 mức
-- mức 0 chỉ cho biết hệ thống có các tang nào
-- mức 1 cho biết các tầng thuộc thành phần nào (Frontend, Backend, nhúng) và trong mỗi tầng có chia nhiều tầng nhỏ hơn trong 1 tầng lớn không, trong mỗi tầng có những package gì, các package có quan hệ gì với nhau, hộ trợ nhau hay gọi nha xu ly dữ liệu
-- 1 tầng = 1 thư mục lớn
-- 1 package là 1 thư mục con chứa cái file làm nhiệm vụ cụ thể gì đó
-=> nó cho thiết cấu trúc cây thư mục của project lần 1
