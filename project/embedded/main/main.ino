@@ -1,21 +1,5 @@
 #include "config.h" // thư viện chứa các cấu hình
 
-#include "1_Service/MQTTService/ConnectHiveMQ.h"
-
-#include "1_Service/PlantWateringService/WateringService.h"
-
-#include "2_DeviceControl/wifiController/wifiControl.h"
-
-#include "2_DeviceControl/sensorController/DHT11Controller/DHT11Control.h"
-//#include "2_DeviceControl/sensorController/soilSensorController/soilSensorControl.h"
-
-#include "2_DeviceControl/scheduleController/cycleControl.h"
-#include "2_DeviceControl/scheduleController/scheduleControl.h"
-
-#include "2_DeviceControl/RTC_DS3231Controller/DS3231Control.h"
-
-#include "2_DeviceControl/pumpController/PumpControl.h"
-
 void setup() {
   // gọi setup cấu hình
   beginConfig();
@@ -63,7 +47,7 @@ void loop() {
           {
             pumpStatus =  true;// đang tưới
             startPump();// bật máy bơm
-            TIMEONPUMP = wateringDurationFixedCycle;
+            TIMEONPUMP = wateringDuration;
             t_pump = millis();
           }
         }
@@ -81,7 +65,7 @@ void loop() {
           {
             pumpStatus =  true;// đang tưới
             startPump();// bật máy bơm
-            TIMEONPUMP = wateringDurationBioCycle;
+            TIMEONPUMP = wateringDuration;
             t_pump = millis();
           }
 

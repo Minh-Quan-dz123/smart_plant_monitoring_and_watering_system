@@ -8,6 +8,7 @@ uint16_t wateringDurationBioCycle;
 
 uint8_t status;
 
+
 void loadEEPROM()
 {
   EEPROM.begin(18); // cấp phát 18 byte
@@ -37,7 +38,8 @@ void loadEEPROM()
     EEPROM.get(7, biological_cycle);
     EEPROM.get(11,wateringDurationBioCycle);
     EEPROM.get(13,status);
-    Serial.println("✅ Dữ liệu đã nạp từ EEPROM!");
+    Serial.println("da lay du lieu tu EEPROM");
+    
   }
 
   EEPROM.end();

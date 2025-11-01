@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
+
 // các biến 
 extern const char* mqtt_sever; // đường dẫn tới HiveMQ
 extern const int mqtt_port; // tên port

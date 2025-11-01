@@ -1,5 +1,5 @@
-#ifndef CYCLECONTRO_H
-#define CYCLECONTRO_H
+#ifndef CYCLECONTROL_H
+#define CYCLECONTROL_H
 
 #include <Arduino.h>
 #include <EEPROM.h>

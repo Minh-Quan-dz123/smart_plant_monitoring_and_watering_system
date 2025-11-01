@@ -1,16 +1,17 @@
 #include "WateringService.h"
 
-#include "../../2_DeviceControl/scheduleController/scheduleControl.h"
-#include "../../2_DeviceControl/scheduleController/scheduleControl.cpp"
+// controller -> schedule
+#include "scheduleControl.h"
 
-#include "../../2_DeviceControl/scheduleController/cycleControl.h"
-#include "../../2_DeviceControl/scheduleController/cycleControl.cpp"
+#include "cycleControl.h"
+
+#include "DS3231Control.h"
 
 // tìm tới lịch hiện tại đang cần set
 // lấy vector<Schedule> schedules ra để check
 int vt_lich_crr = 0;
 int wateringDuration = 0;
-int sizeVT = schedules.length();
+int sizeVT = schedules.size();
 
 
 // cài đặt vị trí con trỏ trỏ vào lịch đang so sánh
@@ -44,13 +45,18 @@ bool checkIsTimeSchedule()
   return false;
 }
 
+
 // cài đặt trang thái tưới cây
 uint32_t T = 1000;
 uint32_t T_copy = 1000;
 void setStatus(uint8_t new_status)
 {
   status = new_status;
-  if(status == 2)// tưới cây theo chu kì cố định
+  if(status == 1)
+  {
+    setPointerSchedule();
+  }
+  else if(status == 2)// tưới cây theo chu kì cố định
   {
     wateringDuration = wateringDurationFixedCycle;
     T = fixed_cycle;
@@ -62,6 +68,23 @@ void setStatus(uint8_t new_status)
     T = biological_cycle;
     T_copy = T;
   }
+  saveCycle();
+}
+
+// cập nhật FixedCycle
+void updateFCycle(uint32_t newFcycle, uint16_t newDuratime)
+{
+  fixed_cycle = newFcycle;
+  wateringDurationFixedCycle = newDuratime;
+  setStatus(status);
+}
+
+// cập nhật BioCycle
+void updateBCycle(uint32_t newBcycle, uint16_t newDuratime)
+{
+  biological_cycle = newBcycle;
+  wateringDurationBioCycle = newDuratime;
+  setStatus(status);
 }
 
 
@@ -69,5 +92,5 @@ void setStatus(uint8_t new_status)
 bool PumpEmer = false;
 void emergencyPump()
 {
-  pumpStatus = true;
+  PumpEmer = true;
 }

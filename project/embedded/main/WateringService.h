@@ -1,6 +1,7 @@
 #ifndef WATERINGSERVICE_H
 #define WATERINGSERVICE_H
 
+#include <Arduino.h>
 
 extern int vt_lich_crr;// lịch gì đang được set
 extern int wateringDuration;// tưới cây bao lâu
@@ -11,6 +12,9 @@ bool checkIsTimeSchedule(); // so sánh đã tới lịch chưa
 
 void setStatus(uint8_t new_status); // quản lý trạng thái
 extern uint32_t T; // chu kì tưới
+extern uint32_t T_copy;
+void updateFCycle();
+void updateBCycle();
 
 // hàm tưới cây khẩn cấp
 extern bool PumpEmer; // tưới cây khẩn cấp

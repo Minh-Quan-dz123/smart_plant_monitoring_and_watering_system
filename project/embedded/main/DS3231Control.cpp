@@ -4,6 +4,13 @@
 RTC_DS3231 rtc;
 DateTime nowTime;
 
+void beginRTC()
+{
+  Wire.begin(SDA,SCL);
+  rtc.begin();
+  setRealTime(2025,1,1,1,1,1);
+}
+
 void setRealTime(int year, int month, int day, int hour, int minute, int second)
 {
   rtc.adjust(DateTime(year, month, day, hour, minute, second));// đẩy vào biến nowTime

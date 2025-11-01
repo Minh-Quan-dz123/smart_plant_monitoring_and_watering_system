@@ -1,6 +1,7 @@
 #ifndef SCHEDULECONTROL_H
 #define SCHEDULECONTROL_H
 
+#include <Arduino.h>
 #include <LittleFS.h>
 #include <FS.h>
 #include <ArduinoJson.h>
@@ -18,6 +19,8 @@ struct Schedule {
   int second;
   int wateringDuration;// thời gian tưới
 };
+
+extern vector<Schedule> schedules;
 
 // khai báo các hàm
 // 0 tạo file chứa dữ liệu và nó sẽ được lưu vĩnh viễn

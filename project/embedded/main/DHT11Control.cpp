@@ -2,6 +2,11 @@
 
 DHT dht11(D2, DHT11);
 
+void initDHT11()
+{
+  dht11.begin();
+}
+
 float getTemp()
 {
   float x = dht11.readTemperature();

@@ -8,6 +8,7 @@
 extern DHT dht11;
 
 // khai báo hàm, tham số
+void initDHT11();
 float getTemp();// lấy ra nhiệt độ kk
 float getHum(); // lấy ra độ ẩm kk
 

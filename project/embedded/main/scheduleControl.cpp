@@ -66,7 +66,7 @@ void saveSchedule() // lưu dữ liệu từ RAM vào file trong bộ nhơ�
     obj["hour"] = s.hour;
     obj["minute"] = s.minute;
     obj["second"] = s.second;
-    obj["wateringDuration"] = s.wateringDuration
+    obj["wateringDuration"] = s.wateringDuration;
   }
 
   File file = LittleFS.open(scheduleFile, "w");// mở file để viết

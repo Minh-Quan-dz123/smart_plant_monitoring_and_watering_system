@@ -1,27 +1,19 @@
 #include "ConnectHiveMQ.h"
 
-#include "../../2_DeviceControl/wifiController/wifiControl.h"
-#include "../../2_DeviceControl/wifiController/wifiControl.cpp"
+#include "wifiControl.h"
 
+// controller
+#include "DHT11Control.h"
 
-#include "../../2_DeviceControl/sensorController/DHT11Controller/DHT11Control.h"
-#include "../../2_DeviceControl/sensorController/DHT11Controller/DHT11Control.cpp"
+#include "scheduleControl.h"
 
-#include "../../2_DeviceControl/scheduleController/scheduleControl.h"
-#include "../../2_DeviceControl/scheduleController/scheduleControl.cpp"
+#include "cycleControl.h"
 
-#include "../../2_DeviceControl/scheduleController/cycleControl.h"
-#include "../../2_DeviceControl/scheduleController/cycleControl.cpp"
+#include "DS3231Control.h"
 
-#include "../../2_DeviceControl/RTC_DS3231Controller/DS3231Control.h"
-#include "../../2_DeviceControl/RTC_DS3231Controller/DS3231Control.cpp"
+#include "PumpControl.h"
 
-
-#include "../../2_DeviceControl/pumpController/PumpControl.h"
-#include "../../2_DeviceControl/pumpController/PumpControl.cpp"
-
-#include "../../2_Service/PlantWateringService/WateringService.h"
-#include "../../2_Service/PlantWateringService/WateringService.cpp"
+#include "WateringService.h"
 
 
 const char* mqtt_server ="8c8b67f172b549eba06b16f265f2f580.s1.eu.hivemq.cloud";
@@ -68,7 +60,7 @@ void sendDataToHiveMQ(float temperature, float humidity, float soil)
 
 
 // được gọi khi nó nhận được 1 tin từ HiveMQ
-void callback(char *topic, byte* payload, unsigned int length)
+void callback(char *topic, uint8_t* payload, unsigned int length)
 {
   //1 kiểm tra đầu vào
   if(length <= 0) return;
@@ -170,7 +162,7 @@ void callback(char *topic, byte* payload, unsigned int length)
     
     Serial.print("nhan duoc topic8: ");
     Serial.println(msg);
-    deleteSchedule(atoi(msg));// mỗi lần xóa lịch thì phải set lại con trỏ
+    deleteSchedule(atoi(msg.c_str()));// mỗi lần xóa lịch thì phải set lại con trỏ
     setPointerSchedule();
 
      // in ra màn hình
@@ -223,7 +215,7 @@ void callback(char *topic, byte* payload, unsigned int length)
   // 3.7 nếu là topic10: thay đổi trạng thái tưới cây
   else if(strcmp(topic,topic10) == 0)
   {
-    int newStatus = atoi(msg);
+    int newStatus = atoi(msg.c_str());
     setStatus(newStatus);
   }
 
@@ -264,7 +256,10 @@ void setupMQTT()
 {
   espClient.setInsecure();// ko kiểm tra chứng chỉ SSL
   client.setServer(mqtt_server, mqtt_port);// chọn server
-  client.setCallback(callback);// nhận hàm "callback()" là xử lý callback
+  client.setCallback([](char* topic, uint8_t* payload, unsigned int length) 
+  {
+      callback(topic, payload, length);
+  });// nhận hàm "callback()" là xử lý callback
   reconnectMQTT();// gọi để đảm bảo kết nối
 }
 
