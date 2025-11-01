@@ -1,29 +1,5 @@
 #include "config.h"
 
-#include "1_Service/MQTTService/ConnectHiveMQ.h"
-#include "1_Service/MQTTService/ConnectHiveMQ.cpp"
-
-#include "1_Service/PlantWateringService/WateringService.h"
-#include "1_Service/PlantWateringService/WateringService.cpp"
-
-#include "2_DeviceControl/wifiController/wifiControl.h"
-#include "2_DeviceControl/wifiController/wifiControl.cpp"
-
-#include "2_DeviceControl/sensorController/DHT11Controller/DHT11Control.h"
-#include "2_DeviceControl/sensorController/DHT11Controller/DHT11Control.cpp"
-//#include "2_DeviceControl/sensorController/soilSensorController/soilSensorControl.h"
-
-#include "2_DeviceControl/scheduleController/cycleControl.h"
-#include "2_DeviceControl/scheduleController/cycleControl.cpp"
-
-#include "2_DeviceControl/scheduleController/scheduleControl.h"
-#include "2_DeviceControl/scheduleController/scheduleControl.cpp"
-
-#include "2_DeviceControl/RTC_DS3231Controller/DS3231Control.h"
-#include "2_DeviceControl/RTC_DS3231Controller/DS3231Control.cpp"
-
-#include "2_DeviceControl/pumpController/PumpControl.h"
-#include "2_DeviceControl/pumpController/PumpControl.cpp"
 
 void beginConfig()
 {
@@ -35,16 +11,14 @@ void beginConfig()
   initPump();
 
   // 2 setup DS3231
-  Wire.begin(SDA,SCL); //khởi tạo i2c giao tiếp ở 2 chân này ( DS3231)
-  rtc.begin();
-  setRealTime(2025,1,1,1,1,1);
+  beginRTC();
 
   //3 setup EEPROM và LittleFS
   loadEEPROM();
   initScheduleStorage();
 
   // 4 setup DHT
-  dht11.begin();
+  initDHT11();
   
   //5 setup wifi
   setWifi();

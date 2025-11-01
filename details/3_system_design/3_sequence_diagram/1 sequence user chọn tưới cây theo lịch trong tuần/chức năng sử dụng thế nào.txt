@@ -1,7 +1,0 @@
-1: Thêm lịch: Người dùng sẽ điền thông tin của lịch (thứ, giờ, phút, thời gian bật máy bơm), 
-   + frontend chỉ check lỗi đầu vào gửi lịch cho backend/server
-   + server sắp xếp lịch đó và gửi (vị trí lịch) tới frontend hiển thị đồng thời gửi (vị trí lịch,  thông tin lịch) lên HiveMQ cho esp8266 nhận
-   + esp8266 nhận và lưu vào database riêng của thiết bị và chạy danh sách lịch
-2: Xóa lịch: Người dùng chọn lịch để xóa, frontend chỉ cần gửi index về cho backend xóa trong           database, back end gửi index về cho thiết bị
-3: chỉnh sửa: ng dung ko sửa lịch, chỉ xóa và thêm (độ phức tạp thuật toán là O(n))
-=> yêu cầu vẽ sequence ở mức 2 cho 3 biểu đồ 
