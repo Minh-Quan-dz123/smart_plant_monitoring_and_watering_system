@@ -17,7 +17,6 @@ export class AuthController {
     @Public()
     @Post('signin')
     async signin(@Body() data: SignInDto): Promise<{ access_token: string }> {
-        console.log('Đang gọi hàm SignIn trong AuthController...');
         const token = await this.authService.SignIn( data.email, data.password );
         return token;
 }

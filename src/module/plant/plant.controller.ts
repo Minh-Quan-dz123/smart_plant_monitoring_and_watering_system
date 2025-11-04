@@ -29,7 +29,7 @@ export class PlantController {
     @ApiForbiddenResponse({ description: 'Forbidden access (Requires Admin role)' })
     @ApiConflictResponse({ description: 'Plant name already exists' })
     @Post()
-    @Roles(Role.ADMIN) // 🔥 chỉ admin mới tạo được plant
+    @Roles(Role.ADMIN) // admin mới tạo được plant
     async createPlant(
     @Body() createPlantDto: CreatePlantDto,
     @Body() 
