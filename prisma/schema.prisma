@@ -58,12 +58,13 @@ model Garden {
 }
 
 model Sensor {
-  id        Int      @id @default(autoincrement())
-  type      String // ví dụ: temperature, humidity
-  value     Float
-  timestamp DateTime @default(now())
-  garden    Garden   @relation(fields: [gardenId], references: [id])
-  gardenId  Int
+  id            Int      @id @default(autoincrement())
+  temperature   Float    // Nhiệt độ (DHT11) - đơn vị: °C
+  airHumidity   Float    // Độ ẩm không khí (DHT11) - đơn vị: %
+  soilMoisture  Float    // Độ ẩm đất - đơn vị: %
+  timestamp     DateTime @default(now())
+  garden        Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  gardenId      Int
 }
 
 model Irrigation {
