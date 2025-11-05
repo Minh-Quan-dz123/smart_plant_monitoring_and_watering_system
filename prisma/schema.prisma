@@ -28,19 +28,24 @@ model User {
   roleId    Int
   plants    Plant[]
   gardens   Garden[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Plant {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique // Tên cây
-  description String? // Mô tả, công dụng, cách trồng
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  createdById Int
-  gardens     Garden[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    Int      @id @default(autoincrement())
+  name                  String   @unique // Tên cây
+  description           String? // Mô tả, công dụng, cách trồng
+  // Ngưỡng nhiệt độ tiêu chuẩn (°C)
+  minTemperature        Float? // Nhiệt độ tối thiểu
+  maxTemperature        Float? // Nhiệt độ tối đa
+  // Ngưỡng độ ẩm không khí tiêu chuẩn (%)
+  minAirHumidity        Float? // Độ ẩm không khí tối thiểu
+  maxAirHumidity        Float? // Độ ẩm không khí tối đa
+  // Ngưỡng độ ẩm đất tiêu chuẩn (%)
+  minSoilMoisture       Float? // Độ ẩm đất tối thiểu (dưới ngưỡng này cần tưới)
+  maxSoilMoisture       Float? // Độ ẩm đất tối đa
+  createdBy             User     @relation(fields: [createdById], references: [id])
+  createdById           Int
+  gardens               Garden[]
 }
 
 model Garden {
@@ -50,11 +55,11 @@ model Garden {
   plantId     Int
   user        User         @relation(fields: [userId], references: [id])
   userId      Int
+  // Chế độ tưới: "manual" | "schedule" | "auto"
+  irrigationMode String    @default("manual") // manual, schedule, auto
   sensors     Sensor[]
   irrigations Irrigation[]
   schedules   Schedule[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
 }
 
 model Sensor {
@@ -82,6 +87,4 @@ model Schedule {
   enabled   Boolean  @default(true) // Bật/tắt schedule
   garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
   gardenId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

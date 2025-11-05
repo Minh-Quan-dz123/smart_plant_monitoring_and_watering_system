@@ -2,13 +2,17 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as mqtt from 'mqtt';
 import { SensorService } from 'src/sensor/sensor.service';
+import { IrrigationService } from 'src/irrigation/irrigation.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
   private readonly logger = new Logger(MqttService.name);
   private client: mqtt.MqttClient;
 
-  constructor(private sensorService: SensorService) {}
+  constructor(
+    private sensorService: SensorService,
+    private irrigationService: IrrigationService,
+  ) {}
 
   onModuleInit() {
     this.client = mqtt.connect({
@@ -17,13 +21,11 @@ export class MqttService implements OnModuleInit {
       protocol: 'mqtts',
       username: 'sang2004',
       password: 'Sang01032004',
-      reconnectPeriod: 5000, // Tự động reconnect sau 5 giây nếu mất kết nối
+      reconnectPeriod: 5000, 
     });
 
     this.client.on('connect', () => {
       this.logger.log(' Đã kết nối đến HiveMQ!');
-      
-      // Subscribe tất cả topics để test (wildcard #)
       this.client.subscribe('#', (err) => {
         if (err) {
           this.logger.error(` Lỗi subscribe topic: ${err.message}`);
@@ -70,7 +72,7 @@ export class MqttService implements OnModuleInit {
         const messageStr = message.toString();
         
         // Log tất cả messages để dễ test và debug
-        this.logger.log(`📨 [MQTT] Nhận message từ topic [${topic}]: ${messageStr}`);
+        this.logger.log(` [MQTT] Nhận message từ topic [${topic}]: ${messageStr}`);
 
         // Xử lý dữ liệu sensor từ ESP8266
         if (topic.startsWith('iot/sensor/')) {
@@ -127,8 +129,15 @@ export class MqttService implements OnModuleInit {
         gardenId: gardenId,
       });
 
+      // Kiểm tra ngưỡng và tự động tưới nếu cần (chế độ AUTO)
+      const alerts = await this.irrigationService.checkThresholdAndIrrigate(gardenId, {
+        temperature: sensorData.temperature,
+        airHumidity: sensorData.airHumidity,
+        soilMoisture: sensorData.soilMoisture,
+      });
+
       // Hiển thị dữ liệu sensor trên console với format đẹp
-      this.displaySensorData(gardenId, sensorData);
+      this.displaySensorData(gardenId, sensorData, alerts);
     } catch (error) {
       this.logger.error(` Lỗi xử lý dữ liệu sensor: ${error.message}`);
     }
@@ -137,7 +146,11 @@ export class MqttService implements OnModuleInit {
   /**
    * Hiển thị dữ liệu sensor trên console với format đẹp
    */
-  private displaySensorData(gardenId: number, sensorData: { temperature: number; airHumidity: number; soilMoisture: number }) {
+  private displaySensorData(
+    gardenId: number,
+    sensorData: { temperature: number; airHumidity: number; soilMoisture: number },
+    alerts: any[] = [],
+  ) {
     const timestamp = new Date().toLocaleString('vi-VN', {
       year: 'numeric',
       month: '2-digit',
@@ -158,6 +171,16 @@ export class MqttService implements OnModuleInit {
     console.log(`🌡️  Nhiệt độ:        ${sensorData.temperature.toFixed(1)}°C`);
     console.log(`💧 Độ ẩm không khí:  ${sensorData.airHumidity.toFixed(1)}%`);
     console.log(`🌱 Độ ẩm đất:        ${sensorData.soilMoisture.toFixed(1)}%`);
+    
+    // Hiển thị cảnh báo nếu có
+    if (alerts.length > 0) {
+      console.log(line);
+      console.log('🚨 CẢNH BÁO:');
+      alerts.forEach((alert) => {
+        console.log(`   ${alert.message}`);
+      });
+    }
+    
     console.log(separator);
     console.log('✅ Đã lưu vào database\n');
   }
@@ -171,7 +194,7 @@ export class MqttService implements OnModuleInit {
       const gardenId = parseInt(topicParts[topicParts.length - 1]);
       const feedback = JSON.parse(message);
 
-      this.logger.log(`📬 Feedback từ garden ${gardenId}: ${JSON.stringify(feedback)}`);
+      this.logger.log(` Feedback từ garden ${gardenId}: ${JSON.stringify(feedback)}`);
       // Có thể thêm logic xử lý feedback ở đây nếu cần
     } catch (error) {
       this.logger.error(` Lỗi xử lý feedback: ${error.message}`);
