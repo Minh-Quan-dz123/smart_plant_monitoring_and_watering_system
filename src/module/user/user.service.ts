@@ -26,7 +26,7 @@ export class UserService {
     }
 
     async createUser(createUser: CreateUserDto) {
-        const { email, password, username, roles } = createUser;
+        const { email, password, username } = createUser;
         try{
             //hash password
             const hashedPassword = await this.hashPassword(password);
@@ -37,7 +37,7 @@ export class UserService {
                     password: hashedPassword,
                     username,
                     role: {
-                      connect: { name:roles || 'USER'},
+                      connect: { name: 'USER' },
                      }
                 },
             });

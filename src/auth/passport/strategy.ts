@@ -34,15 +34,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token không hợp lệ');
     }
 
-    // Có thể kiểm tra thêm trong DB nếu cần (ví dụ: user đã bị khóa?)
-    // const user = await this.userService.findById(payload.sub);
-    // if (!user) throw new UnauthorizedException('User không tồn tại');
+    // Đảm bảo roles luôn là array, nếu không có thì mặc định là ['USER']
+    // Điều này xử lý trường hợp token cũ không có roles
+    const roles = payload.roles && Array.isArray(payload.roles) 
+      ? payload.roles 
+      : ['USER'];
 
     // Kết quả trả về sẽ được gắn vào req.user
     return {
+      id: payload.sub,
       userId: payload.sub,
       email: payload.email,
-      roles: payload.roles,
+      roles: roles,
     };
   }
 }

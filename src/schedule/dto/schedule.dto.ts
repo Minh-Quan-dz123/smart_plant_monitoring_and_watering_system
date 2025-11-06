@@ -15,11 +15,5 @@ export class ScheduleDto {
 
   @ApiProperty({ example: 1 })
   gardenId: number;
-
-  @ApiProperty({ example: '2025-10-28T10:00:00Z' })
-  createdAt: Date;
-
-  @ApiProperty({ example: '2025-10-28T10:00:00Z' })
-  updatedAt: Date;
 }
 

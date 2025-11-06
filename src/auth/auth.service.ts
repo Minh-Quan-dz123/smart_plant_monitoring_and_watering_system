@@ -17,7 +17,10 @@ export class AuthService {
     ){}
 
     async validateUser(email: string, password: string): Promise<any> {
-        const user = await this.prismaService.user.findUnique({where: {email}});
+        const user = await this.prismaService.user.findUnique({
+            where: {email},
+            include: { role: true }
+        });
         if(!user) return null;
         const isPasswordValid = await this.userservice.comparePassword(password, user.password);
         if(!isPasswordValid) return null;
@@ -30,13 +33,17 @@ export class AuthService {
         if(!user){
             throw new UnauthorizedException('email or password is incorrect');
         }
-        const payload = { sub: user.id, email: user.email, roles: user.roles}
+        const payload = { 
+            sub: user.id, 
+            email: user.email, 
+            roles: [user.role.name] // Chuyển role name thành array để guard có thể check
+        }
         const token = this.jwtService.sign(payload);
         return { access_token: token}
     }
 
     async register(data: CreateUserDto){
-        const {email, password, username, roles} = data;
+        const {email, password, username} = data;
         try{
             const hashedPassword = await this.userservice.hashPassword(password)
             await this.prismaService.user.create({
@@ -45,7 +52,7 @@ export class AuthService {
                     password: hashedPassword,
                     username,
                     role: {
-                        connect: { name:roles || 'USER'},
+                        connect: { name: 'USER' }
                     }
                 }
             })

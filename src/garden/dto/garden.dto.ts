@@ -14,9 +14,9 @@ export class GardenDto {
   @ApiProperty({ example: 5 })
   userId: number;
 
+  @ApiProperty({ example: 'manual', enum: ['manual', 'schedule', 'auto'] })
+  irrigationMode: string;
+
   @ApiProperty({ type: () => PlantDto })
   plant?: PlantDto;
-
-  @ApiProperty({ example: '2025-10-28T10:00:00Z' })
-  createdAt: Date;
 }

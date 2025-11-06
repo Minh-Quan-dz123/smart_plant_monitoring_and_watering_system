@@ -41,7 +41,7 @@ export class GardenController {
   @Post()
   async createGarden(@Body() dto: CreateGardenDto, @Req() req): Promise<GardenDto> {
     const userId = req.user.id;
-    return this.gardenService.createGarden(dto, userId);
+    return this.gardenService.createGarden(dto, userId) as any as GardenDto;
   }
 
   //  Lấy danh sách vườn của user hiện tại
@@ -53,7 +53,7 @@ export class GardenController {
   @Get()
   async getUserGardens(@Req() req): Promise<GardenDto[]> {
     const userId = req.user.id;
-    return this.gardenService.findUserGardens(userId);
+    return this.gardenService.findUserGardens(userId) as any as GardenDto[];
   }
 
   //  Xóa vườn của user

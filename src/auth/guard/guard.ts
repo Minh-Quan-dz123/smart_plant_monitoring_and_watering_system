@@ -22,7 +22,6 @@ export class AuthGuard extends NestAuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
-    // kiểm tra xem route có decorator @Public() không
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -37,9 +36,27 @@ export class AuthGuard extends NestAuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
-    // Nếu có lỗi hoặc không có user → ném lỗi 401
-    if (err || !user) {
+  handleRequest(err: any, user: any, info: any) {
+    // Log để debug
+    if (err) {
+      console.error('Auth Guard Error:', err);
+      throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+    }
+    
+    if (!user) {
+      console.error('Auth Guard: No user found. Info:', info);
+      // Nếu có thông tin về lỗi từ passport, hiển thị chi tiết hơn
+      if (info) {
+        if (info.name === 'TokenExpiredError') {
+          throw new UnauthorizedException('Token đã hết hạn');
+        }
+        if (info.name === 'JsonWebTokenError') {
+          throw new UnauthorizedException('Token không hợp lệ');
+        }
+        if (info.name === 'NotBeforeError') {
+          throw new UnauthorizedException('Token chưa được kích hoạt');
+        }
+      }
       throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
     }
 

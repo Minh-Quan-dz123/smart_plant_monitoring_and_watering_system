@@ -45,7 +45,7 @@ export class ScheduleController {
   @Post()
   async createSchedule(@Body() dto: CreateScheduleDto, @Req() req): Promise<ScheduleDto> {
     const userId = req.user.id;
-    return this.scheduleService.createSchedule(dto, userId);
+    return this.scheduleService.createSchedule(dto, userId) as any as ScheduleDto;
   }
 
   // Lấy tất cả lịch tưới của user (tất cả vườn)
@@ -57,7 +57,7 @@ export class ScheduleController {
   @Get()
   async getUserSchedules(@Req() req): Promise<ScheduleDto[]> {
     const userId = req.user.id;
-    return this.scheduleService.getUserSchedules(userId);
+    return this.scheduleService.getUserSchedules(userId) as any as ScheduleDto[];
   }
 
   // Lấy tất cả lịch tưới của một vườn
@@ -74,7 +74,7 @@ export class ScheduleController {
     @Req() req,
   ): Promise<ScheduleDto[]> {
     const userId = req.user.id;
-    return this.scheduleService.getSchedulesByGarden(gardenId, userId);
+    return this.scheduleService.getSchedulesByGarden(gardenId, userId) as any as ScheduleDto[];
   }
 
   // Lấy lịch tưới theo ID
@@ -91,7 +91,7 @@ export class ScheduleController {
     @Req() req,
   ): Promise<ScheduleDto> {
     const userId = req.user.id;
-    return this.scheduleService.getScheduleById(id, userId);
+    return this.scheduleService.getScheduleById(id, userId) as any as ScheduleDto;
   }
 
   // Cập nhật lịch tưới
@@ -110,7 +110,7 @@ export class ScheduleController {
     @Req() req,
   ): Promise<ScheduleDto> {
     const userId = req.user.id;
-    return this.scheduleService.updateSchedule(id, dto, userId);
+    return this.scheduleService.updateSchedule(id, dto, userId) as any as ScheduleDto;
   }
 
   // Xóa lịch tưới

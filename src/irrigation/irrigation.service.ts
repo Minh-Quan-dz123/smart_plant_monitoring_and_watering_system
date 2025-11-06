@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MqttService } from 'src/mqtt/mqtt.service';
 import { IrrigationMode } from './irrigation-mode.enum';
@@ -22,6 +22,7 @@ export class IrrigationService {
 
   constructor(
     private prisma: PrismaService,
+    @Inject(forwardRef(() => MqttService))
     private mqttService: MqttService,
   ) {}
 
@@ -52,17 +53,17 @@ export class IrrigationService {
       if (plant.minTemperature !== null && sensorData.temperature < plant.minTemperature) {
         alerts.push({
           type: 'temperature',
-          message: `⚠️ Nhiệt độ quá thấp: ${sensorData.temperature.toFixed(1)}°C (ngưỡng: ${plant.minTemperature}°C)`,
+          message: ` Nhiệt độ quá thấp: ${sensorData.temperature.toFixed(1)}°C (ngưỡng: ${plant.minTemperature}°C)`,
           currentValue: sensorData.temperature,
-          threshold: { min: plant.minTemperature, max: plant.maxTemperature },
+          threshold: { min: plant.minTemperature ?? undefined, max: plant.maxTemperature ?? undefined },
         });
       }
       if (plant.maxTemperature !== null && sensorData.temperature > plant.maxTemperature) {
         alerts.push({
           type: 'temperature',
-          message: `⚠️ Nhiệt độ quá cao: ${sensorData.temperature.toFixed(1)}°C (ngưỡng: ${plant.maxTemperature}°C)`,
+          message: ` Nhiệt độ quá cao: ${sensorData.temperature.toFixed(1)}°C (ngưỡng: ${plant.maxTemperature}°C)`,
           currentValue: sensorData.temperature,
-          threshold: { min: plant.minTemperature, max: plant.maxTemperature },
+          threshold: { min: plant.minTemperature ?? undefined, max: plant.maxTemperature ?? undefined },
         });
       }
     }
@@ -72,17 +73,17 @@ export class IrrigationService {
       if (plant.minAirHumidity !== null && sensorData.airHumidity < plant.minAirHumidity) {
         alerts.push({
           type: 'airHumidity',
-          message: `⚠️ Độ ẩm không khí quá thấp: ${sensorData.airHumidity.toFixed(1)}% (ngưỡng: ${plant.minAirHumidity}%)`,
+          message: ` Độ ẩm không khí quá thấp: ${sensorData.airHumidity.toFixed(1)}% (ngưỡng: ${plant.minAirHumidity}%)`,
           currentValue: sensorData.airHumidity,
-          threshold: { min: plant.minAirHumidity, max: plant.maxAirHumidity },
+          threshold: { min: plant.minAirHumidity ?? undefined, max: plant.maxAirHumidity ?? undefined },
         });
       }
       if (plant.maxAirHumidity !== null && sensorData.airHumidity > plant.maxAirHumidity) {
         alerts.push({
           type: 'airHumidity',
-          message: `⚠️ Độ ẩm không khí quá cao: ${sensorData.airHumidity.toFixed(1)}% (ngưỡng: ${plant.maxAirHumidity}%)`,
+          message: ` Độ ẩm không khí quá cao: ${sensorData.airHumidity.toFixed(1)}% (ngưỡng: ${plant.maxAirHumidity}%)`,
           currentValue: sensorData.airHumidity,
-          threshold: { min: plant.minAirHumidity, max: plant.maxAirHumidity },
+          threshold: { min: plant.minAirHumidity ?? undefined, max: plant.maxAirHumidity ?? undefined },
         });
       }
     }
@@ -91,9 +92,9 @@ export class IrrigationService {
     if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
       alerts.push({
         type: 'soilMoisture',
-        message: `🌱 Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
+        message: ` Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
         currentValue: sensorData.soilMoisture,
-        threshold: { min: plant.minSoilMoisture, max: plant.maxSoilMoisture },
+        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
       });
       shouldIrrigate = true;
     }
@@ -102,15 +103,15 @@ export class IrrigationService {
     if (plant.maxSoilMoisture !== null && sensorData.soilMoisture > plant.maxSoilMoisture) {
       alerts.push({
         type: 'soilMoisture',
-        message: `💧 Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
+        message: ` Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
         currentValue: sensorData.soilMoisture,
-        threshold: { min: plant.minSoilMoisture, max: plant.maxSoilMoisture },
+        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
       });
     }
 
     // Gửi cảnh báo nếu có
     if (alerts.length > 0) {
-      this.logger.warn(`🚨 Cảnh báo cho vườn #${gardenId}:`);
+      this.logger.warn(` Cảnh báo cho vườn #${gardenId}:`);
       alerts.forEach((alert) => {
         this.logger.warn(`   ${alert.message}`);
       });
@@ -150,7 +151,7 @@ export class IrrigationService {
       },
     });
 
-    this.logger.log(`💧 Đã bắt đầu tưới vườn #${gardenId} trong ${duration} phút`);
+    this.logger.log(` Đã bắt đầu tưới vườn #${gardenId} trong ${duration} phút`);
   }
 
   /**
@@ -178,7 +179,7 @@ export class IrrigationService {
       },
     });
 
-    this.logger.log(`🛑 Đã dừng tưới vườn #${gardenId}`);
+    this.logger.log(` Đã dừng tưới vườn #${gardenId}`);
   }
 
   /**
@@ -202,7 +203,7 @@ export class IrrigationService {
       data: { irrigationMode: mode },
     });
 
-    this.logger.log(`✅ Đã cập nhật chế độ tưới vườn #${gardenId} thành: ${mode}`);
+    this.logger.log(` Đã cập nhật chế độ tưới vườn #${gardenId} thành: ${mode}`);
   }
 
   /**

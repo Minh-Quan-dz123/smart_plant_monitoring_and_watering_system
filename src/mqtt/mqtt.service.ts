@@ -1,5 +1,5 @@
 // mqtt.service.ts
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, Inject, forwardRef } from '@nestjs/common';
 import * as mqtt from 'mqtt';
 import { SensorService } from 'src/sensor/sensor.service';
 import { IrrigationService } from 'src/irrigation/irrigation.service';
@@ -11,6 +11,7 @@ export class MqttService implements OnModuleInit {
 
   constructor(
     private sensorService: SensorService,
+    @Inject(forwardRef(() => IrrigationService))
     private irrigationService: IrrigationService,
   ) {}
 

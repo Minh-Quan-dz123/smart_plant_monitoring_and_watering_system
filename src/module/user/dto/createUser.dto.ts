@@ -18,14 +18,4 @@ export class CreateUserDto {
     @IsNotEmpty({ message: 'username should not be empty' })
     username: string
     
-    @ApiProperty({
-    example: 'USER',
-    description: 'roles of the user',
-    enum: Role,
-    default: Role.USER,
-    })
-    @IsEnum(Role, { message: 'role must be either USER or ADMIN' })
-    @IsOptional() // nếu bạn muốn role mặc định là USER khi không truyền
-    roles?: Role = Role.USER;
-
 }

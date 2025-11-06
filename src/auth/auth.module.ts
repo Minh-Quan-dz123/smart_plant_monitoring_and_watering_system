@@ -9,6 +9,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { RoleService } from 'src/role/role.service';
 import { RoleModule } from 'src/role/role.module';
 import { UserService } from 'src/module/user/user.service';
+import { JwtStrategy } from './passport/strategy';
+import type { StringValue } from 'ms';
 
 @Module({
   imports:[
@@ -21,16 +23,22 @@ import { UserService } from 'src/module/user/user.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-        useFactory: async (configService: ConfigService) => ({
-          secret: configService.get<string>('JWT_SECRET'),
-          signOptions: {
-            expiresIn:
-              parseInt(configService.get<string>('JWT_EXPIRES') || '1h'),
+        useFactory: async (configService: ConfigService) => {
+          const expiresIn = configService.get<string>('JWT_EXPIRES') || '24h';
+          const secret = configService.get<string>('JWT_SECRET');
+          if (!secret) {
+            throw new Error('JWT_SECRET chưa được cấu hình trong .env');
           }
-        })
+          return {
+            secret: secret,
+            signOptions: {
+              expiresIn: expiresIn as StringValue,
+            }
+          };
+        }
      }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

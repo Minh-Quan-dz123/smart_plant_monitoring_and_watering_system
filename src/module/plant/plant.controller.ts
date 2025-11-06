@@ -10,7 +10,8 @@ import {
     ApiOperation,
     ApiTags,
     ApiForbiddenResponse, 
-    ApiConflictResponse,  
+    ApiConflictResponse,
+    ApiBearerAuth,
 } from '@nestjs/swagger';
 
 import { PlantDto } from './dto/plant.dto';
@@ -18,6 +19,7 @@ import { PositiveIntPipe } from 'src/pipes/CheckId.pipe';
 import { Roles } from 'src/decorator/decorator';
 import { Role } from 'src/role/role.enum';
 import { RolesAuthGuard } from 'src/auth/guard/role.guard';
+import { AuthGuard } from 'src/auth/guard/guard';
 
 @ApiTags('Plant') 
 @Controller('plants') 
@@ -28,16 +30,17 @@ export class PlantController {
     @ApiCreatedResponse({ description: 'Plant successfully created', type: PlantDto })
     @ApiForbiddenResponse({ description: 'Forbidden access (Requires Admin role)' })
     @ApiConflictResponse({ description: 'Plant name already exists' })
+    @ApiBearerAuth()
     @Post()
+    @UseGuards(AuthGuard, RolesAuthGuard)
     @Roles(Role.ADMIN) // admin mới tạo được plant
     async createPlant(
-    @Body() createPlantDto: CreatePlantDto,
-    @Body() 
-    @Req() req,
+        @Body() createPlantDto: CreatePlantDto,
+        @Req() req,
     ): Promise<any> {
-    const adminId = req.user.id;
-    return this.plantService.create(createPlantDto, adminId); 
-      }
+        const adminId = req.user.id || req.user.userId;
+        return this.plantService.create(createPlantDto, adminId); 
+    }
 
     @ApiOperation({ summary: 'List all Plants in the library' })
     @ApiOkResponse({
@@ -46,7 +49,7 @@ export class PlantController {
     })
     @Get()
     async findAllPlants(): Promise<PlantDto[]> {
-        return this.plantService.findAll();
+        return this.plantService.findAll() as any as PlantDto[];
     }
 
     @ApiOperation({ summary: 'Find Plant by ID' })
@@ -56,7 +59,7 @@ export class PlantController {
     async findPlantById(
         @Param('id', PositiveIntPipe) id: number,
     ): Promise<PlantDto> {
-        return this.plantService.findOne(id);
+        return this.plantService.findOne(id) as any as PlantDto;
     }
 
     
@@ -64,22 +67,24 @@ export class PlantController {
     @ApiOkResponse({ description: 'Plant successfully updated', type: PlantDto })
     @ApiNotFoundResponse({ description: 'Plant not found' })
     @ApiForbiddenResponse({ description: 'Forbidden access (Requires Admin role)' })
+    @ApiBearerAuth()
     @Put('/:id')
-    @UseGuards(RolesAuthGuard)
+    @UseGuards(AuthGuard, RolesAuthGuard)
     @Roles(Role.ADMIN)
     async updatePlantById(
         @Param('id', PositiveIntPipe) id: number,
         @Body() updatePlantDto: UpdatePlantDto,
     ): Promise<PlantDto> {
-        return this.plantService.update(id, updatePlantDto);
+        return this.plantService.update(id, updatePlantDto) as any as PlantDto;
     }
 
     @ApiOperation({ summary: 'Delete Plant by ID (Admin only)' })
     @ApiOkResponse({ description: 'Plant successfully deleted', type: Object })
     @ApiNotFoundResponse({ description: 'Plant not found' })
     @ApiForbiddenResponse({ description: 'Forbidden access (Requires Admin role)' })
+    @ApiBearerAuth()
     @Delete('/:id')
-    @UseGuards(RolesAuthGuard)
+    @UseGuards(AuthGuard, RolesAuthGuard)
     @Roles(Role.ADMIN)  
     async deletePlantById(@Param('id', PositiveIntPipe) id: number): Promise<{ message: string }> {
         const deleted = await this.plantService.deleteUserById(id);
