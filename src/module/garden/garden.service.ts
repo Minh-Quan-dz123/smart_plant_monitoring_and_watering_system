@@ -1,11 +1,16 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-
-import { CreateGardenDto } from '../module/garden/dto/createGarden.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateGardenDto } from './dto/createGarden.dto';
+import { MqttService } from '../../mqtt/mqtt.service';
 
 @Injectable()
 export class GardenService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(GardenService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private mqttService: MqttService,
+  ) {}
 
   //tạo vườn mới cho user
   async createGarden(createGardenDto: CreateGardenDto, userId: number) {
@@ -93,8 +98,24 @@ export class GardenService {
       }
     }
 
+    // Kiểm tra kết nối ESP trước khi cập nhật
+    let connectionStatus: 'ON' | 'OFF' = 'OFF';
+    try {
+      connectionStatus = await this.mqttService.checkEspConnection(espId);
+    } catch (error) {
+      this.logger.warn(` Lỗi kiểm tra kết nối ESP ${espId}: ${error.message}`);
+      connectionStatus = 'OFF';
+    }
+
+    // Cập nhật trạng thái kết nối vào ESPDevice
+    const isConnected = connectionStatus === 'ON';
+    await this.prisma.espDevice.update({
+      where: { espId },
+      data: { isConnected },
+    });
+
     // Cập nhật espId cho vườn
-    return this.prisma.garden.update({
+    const updatedGarden = await this.prisma.garden.update({
       where: { id: gardenId },
       data: { espId },
       include: {
@@ -102,6 +123,12 @@ export class GardenService {
         espDevice: true,
       },
     });
+
+    // Trả về kết quả kèm connection status
+    return {
+      ...updatedGarden,
+      connectionStatus,
+    } as any;
   }
 
   //lấy danh sách vườn của user

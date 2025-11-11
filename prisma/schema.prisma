@@ -57,19 +57,22 @@ model Garden {
   userId      Int
   // Chế độ tưới: "manual" | "schedule" | "auto"
   irrigationMode String    @default("manual") // manual, schedule, auto
-  sensors     Sensor[]
+  // Quan hệ với ESP Device (one-to-many từ ESPDevice side để cho phép nhiều vườn có espId = "-1")
+  espDevice   EspDevice?  @relation(fields: [espId], references: [espId], onDelete: SetNull)
+  espId       String      @default("-1") // Hashcode ID từ ESP hardware, mặc định "-1" khi chưa kết nối
   irrigations Irrigation[]
   schedules   Schedule[]
 }
 
-model Sensor {
-  id            Int      @id @default(autoincrement())
-  temperature   Float    // Nhiệt độ (DHT11) - đơn vị: °C
-  airHumidity   Float    // Độ ẩm không khí (DHT11) - đơn vị: %
-  soilMoisture  Float    // Độ ẩm đất - đơn vị: %
-  timestamp     DateTime @default(now())
-  garden        Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
-  gardenId      Int
+model EspDevice {
+  espId         String   @id // Hashcode ID từ ESP hardware (được tạo sẵn)
+  // Giá trị sensor hiện tại từ ESP
+  temperature   Float?   // Nhiệt độ (DHT11) - đơn vị: °C
+  airHumidity   Float?   // Độ ẩm không khí (DHT11) - đơn vị: %
+  soilMoisture  Float?   // Độ ẩm đất - đơn vị: %
+  lastUpdated   DateTime @default(now()) // Thời gian cập nhật cuối cùng
+  isConnected   Boolean  @default(false) // Trạng thái kết nối: true = ON, false = OFF
+  gardens       Garden[] // Quan hệ one-to-many (cho phép nhiều vườn có espId = "-1", nhưng ESPDevice thực tế chỉ có 1 garden)
 }
 
 model Irrigation {
@@ -82,8 +85,14 @@ model Irrigation {
 
 model Schedule {
   id        Int      @id @default(autoincrement())
-  time      String   // Thời gian tưới (format HH:MM, ví dụ "06:00", "18:00")
-  duration  Int      // Thời gian tưới (phút, ví dụ 3)
+  // Ngày cụ thể (nếu là lịch một lần). Null nếu là lịch lặp (daily/weekly/...)
+  date      DateTime?
+  // Thời gian trong ngày theo format HH:MM (24h)
+  time      String
+  // Thời lượng tưới tính bằng giây để phù hợp với ESP
+  durationSeconds Int
+  // Quy tắc lặp (ví dụ: "once", "daily", "weekly:2" với 2 = thứ 3)
+  repeat    String?  // Null nếu là lịch 1 lần (dùng date)
   enabled   Boolean  @default(true) // Bật/tắt schedule
   garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
   gardenId  Int

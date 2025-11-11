@@ -1,10 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsInt, Min, Max, Matches } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsInt, Min, Matches, IsOptional, IsDateString } from 'class-validator';
 
 /**
  * DTO dùng để tạo một Schedule mới (lịch tưới cây cho vườn).
  */
 export class CreateScheduleDto {
+  @ApiPropertyOptional({
+    example: '2025-10-16',
+    description: 'Ngày cụ thể theo ISO (YYYY-MM-DD). Bỏ trống nếu là lịch lặp.',
+  })
+  @IsOptional()
+  @IsDateString({}, { message: 'Ngày phải theo định dạng ISO YYYY-MM-DD' })
+  date?: string; // ISO date string
+
   @ApiProperty({
     example: '06:00',
     description: 'Thời gian tưới theo format HH:MM (24h)',
@@ -17,15 +25,22 @@ export class CreateScheduleDto {
   time: string; // Thời gian tưới (format HH:MM)
 
   @ApiProperty({
-    example: 3,
-    description: 'Thời gian tưới (phút)',
-    minimum: 1,
-    maximum: 60,
+    example: 10,
+    description: 'Thời lượng tưới (giây)',
+    minimum: 1
   })
-  @IsInt({ message: 'Thời lượng tưới phải là số nguyên' })
-  @Min(1, { message: 'Thời lượng tưới tối thiểu là 1 phút' })
-  @Max(60, { message: 'Thời lượng tưới tối đa là 60 phút' })
-  duration: number; // Thời gian tưới (phút)
+  @IsInt({ message: 'Thời lượng tưới phải là số nguyên (giây)' })
+  @Min(1, { message: 'Thời lượng tưới tối thiểu là 1 giây' })
+  durationSeconds: number; // Thời gian tưới (giây)
+
+  @ApiPropertyOptional({
+    example: 'weekly:2',
+    description:
+      'Quy tắc lặp: "once" | "daily" | "weekly:{0-6}". Bỏ trống nếu là lịch 1 lần (dùng date).',
+  })
+  @IsOptional()
+  @IsString({ message: 'Repeat phải là chuỗi' })
+  repeat?: string;
 
   @ApiProperty({
     example: 1,

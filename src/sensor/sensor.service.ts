@@ -12,15 +12,21 @@ export interface SensorDataDto {
 export class SensorService {
   constructor(private prisma: PrismaService) {}
 
-  // Lưu dữ liệu sensor từ ESP8266
+  // Cập nhật dữ liệu sensor từ ESP8266 vào ESPDevice
   async createSensorReading(data: SensorDataDto) {
     // Kiểm tra vườn có tồn tại không
     const garden = await this.prisma.garden.findUnique({
       where: { id: data.gardenId },
+      include: { espDevice: true },
     });
 
     if (!garden) {
       throw new NotFoundException(`Vườn với ID ${data.gardenId} không tồn tại`);
+    }
+
+    // Kiểm tra vườn đã được kết nối với ESP device chưa (espId !== "-1")
+    if (!garden.espId || garden.espId === "-1" || !garden.espDevice) {
+      throw new BadRequestException(`Vườn ${data.gardenId} chưa được kết nối với ESP device`);
     }
 
     // Validate dữ liệu
@@ -34,16 +40,18 @@ export class SensorService {
       throw new BadRequestException('Giá trị độ ẩm đất không hợp lệ (0-100%)');
     }
 
-    // Lưu dữ liệu sensor
-    return this.prisma.sensor.create({
+    // Cập nhật dữ liệu vào ESPDevice (tự động set isConnected = true vì ESP đang gửi dữ liệu)
+    return this.prisma.espDevice.update({
+      where: { espId: garden.espId },
       data: {
         temperature: data.temperature,
         airHumidity: data.airHumidity,
         soilMoisture: data.soilMoisture,
-        gardenId: data.gardenId,
+        lastUpdated: new Date(),
+        isConnected: true, // ESP đang online vì đang gửi dữ liệu
       },
       include: {
-        garden: {
+        gardens: {
           include: {
             plant: true,
           },
@@ -52,84 +60,50 @@ export class SensorService {
     });
   }
 
-  // Lấy dữ liệu sensor mới nhất của một vườn
+  // Lấy dữ liệu sensor hiện tại của một vườn (từ ESPDevice)
   async getLatestSensorReading(gardenId: number) {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
+      include: {
+        espDevice: true,
+        plant: true,
+      },
     });
 
     if (!garden) {
       throw new NotFoundException(`Vườn với ID ${gardenId} không tồn tại`);
     }
 
-    return this.prisma.sensor.findFirst({
-      where: { gardenId },
-      orderBy: { timestamp: 'desc' },
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
-    });
-  }
-
-  // Lấy lịch sử dữ liệu sensor của một vườn
-  async getSensorHistory(gardenId: number, limit: number = 100) {
-    const garden = await this.prisma.garden.findUnique({
-      where: { id: gardenId },
-    });
-
-    if (!garden) {
-      throw new NotFoundException(`Vườn với ID ${gardenId} không tồn tại`);
+    // Kiểm tra vườn đã được kết nối với ESP device chưa (espId !== "-1")
+    if (!garden.espDevice || garden.espId === "-1") {
+      throw new NotFoundException(`Vườn ${gardenId} chưa được kết nối với ESP device`);
     }
 
-    return this.prisma.sensor.findMany({
-      where: { gardenId },
-      orderBy: { timestamp: 'desc' },
-      take: limit,
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
-    });
+    return garden.espDevice;
   }
 
   // Lấy tất cả dữ liệu sensor của user (tất cả vườn)
-  async getUserSensorData(userId: number, limit: number = 50) {
-    // Lấy tất cả vườn của user
+  async getUserSensorData(userId: number) {
+    // Lấy tất cả vườn của user cùng với ESPDevice
     const gardens = await this.prisma.garden.findMany({
       where: { userId },
-      select: { id: true },
-    });
-
-    const gardenIds = gardens.map((g) => g.id);
-
-    if (gardenIds.length === 0) {
-      return [];
-    }
-
-    return this.prisma.sensor.findMany({
-      where: {
-        gardenId: { in: gardenIds },
-      },
-      orderBy: [
-        { gardenId: 'asc' },
-        { timestamp: 'desc' },
-      ],
-      take: limit,
       include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
+        espDevice: true,
+        plant: true,
       },
     });
+
+    // Lọc các vườn đã kết nối ESPDevice (espId !== "-1") và trả về
+    return gardens
+      .filter((garden) => garden.espDevice !== null && garden.espId !== "-1")
+      .map((garden) => ({
+        ...garden.espDevice,
+        garden: {
+          id: garden.id,
+          name: garden.name,
+          plant: garden.plant,
+        },
+      }));
   }
 }
 

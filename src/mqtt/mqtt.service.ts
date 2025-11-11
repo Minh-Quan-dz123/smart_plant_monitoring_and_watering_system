@@ -8,6 +8,8 @@ import { IrrigationService } from 'src/irrigation/irrigation.service';
 export class MqttService implements OnModuleInit {
   private readonly logger = new Logger(MqttService.name);
   private client: mqtt.MqttClient;
+  // Map để lưu các pending connection checks: espId -> { resolve, reject, timeout }
+  private pendingConnectionChecks = new Map<string, { resolve: (status: 'ON' | 'OFF') => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>();
 
   constructor(
     private sensorService: SensorService,
@@ -54,6 +56,15 @@ export class MqttService implements OnModuleInit {
           this.logger.log(' Đã subscribe topic: iot/control/+');
         }
       });
+
+      // Subscribe topic để nhận phản hồi kiểm tra kết nối ESP
+      this.client.subscribe('connect/+/response', (err) => {
+        if (err) {
+          this.logger.error(` Lỗi subscribe topic: ${err.message}`);
+        } else {
+          this.logger.log(' Đã subscribe topic: connect/+/response');
+        }
+      });
     });
 
     this.client.on('error', (error) => {
@@ -82,6 +93,10 @@ export class MqttService implements OnModuleInit {
         // Xử lý feedback từ ESP8266 về trạng thái điều khiển
         else if (topic.startsWith('iot/control/')) {
           await this.handleControlFeedback(topic, messageStr);
+        }
+        // Xử lý phản hồi kiểm tra kết nối ESP
+        else if (topic.startsWith('connect/') && topic.endsWith('/response')) {
+          this.handleConnectionResponse(topic, messageStr);
         }
         // Xử lý các messages khác (để test)
         else {
@@ -234,6 +249,82 @@ export class MqttService implements OnModuleInit {
       } else {
         this.logger.debug(` Đã publish đến topic ${topic}: ${payload}`);
       }
+    });
+  }
+
+  /**
+   * Xử lý phản hồi kiểm tra kết nối từ ESP
+   * Topic format: connect/{espId}/response
+   */
+  private handleConnectionResponse(topic: string, message: string) {
+    try {
+      const topicParts = topic.split('/');
+      const espId = topicParts[1]; // connect/{espId}/response
+
+      const pendingCheck = this.pendingConnectionChecks.get(espId);
+      if (pendingCheck) {
+        // Clear timeout
+        clearTimeout(pendingCheck.timeout);
+        // Remove from map
+        this.pendingConnectionChecks.delete(espId);
+        // Resolve với status ON
+        pendingCheck.resolve('ON');
+        this.logger.log(` ESP ${espId} đã phản hồi - Status: ON`);
+      }
+    } catch (error) {
+      this.logger.error(` Lỗi xử lý phản hồi kết nối: ${error.message}`);
+    }
+  }
+
+  /**
+   * Kiểm tra kết nối ESP device
+   * @param espId ID của ESP device
+   * @returns Promise<'ON' | 'OFF'> - 'ON' nếu ESP phản hồi trong 3s, 'OFF' nếu không
+   */
+  async checkEspConnection(espId: string): Promise<'ON' | 'OFF'> {
+    return new Promise((resolve, reject) => {
+      // Kiểm tra nếu đã có pending check cho espId này
+      const existingCheck = this.pendingConnectionChecks.get(espId);
+      if (existingCheck) {
+        clearTimeout(existingCheck.timeout);
+        existingCheck.reject(new Error('Connection check cancelled - new check initiated'));
+      }
+
+      // Tạo timeout 3 giây
+      const timeout = setTimeout(() => {
+        this.pendingConnectionChecks.delete(espId);
+        this.logger.warn(` ESP ${espId} không phản hồi sau 3s - Status: OFF`);
+        resolve('OFF');
+      }, 3000);
+
+      // Lưu pending check
+      this.pendingConnectionChecks.set(espId, {
+        resolve: (status) => {
+          clearTimeout(timeout);
+          resolve(status);
+        },
+        reject: (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        },
+        timeout,
+      });
+
+      // Publish message để yêu cầu ESP kiểm tra kết nối
+      // Format: connect/{espId}/{is_connect}
+      const topic = `connect/${espId}/1`;
+      const payload = JSON.stringify({ is_connect: 1 });
+      
+      this.client.publish(topic, payload, (error) => {
+        if (error) {
+          clearTimeout(timeout);
+          this.pendingConnectionChecks.delete(espId);
+          this.logger.error(` Lỗi gửi yêu cầu kiểm tra kết nối đến ESP ${espId}: ${error.message}`);
+          reject(error);
+        } else {
+          this.logger.log(` Đã gửi yêu cầu kiểm tra kết nối đến ESP ${espId}`);
+        }
+      });
     });
   }
 

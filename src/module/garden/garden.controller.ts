@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Patch,
   Req,
   UseGuards,
   ParseIntPipe,
@@ -21,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { GardenService } from './garden.service';
 import { CreateGardenDto } from './dto/createGarden.dto';
+import { UpdateEspDeviceDto } from './dto/updateEspDevice.dto';
 import { GardenDto } from './dto/garden.dto';
 import { AuthGuard } from 'src/auth/guard/guard';
 
@@ -54,6 +56,24 @@ export class GardenController {
   async getUserGardens(@Req() req): Promise<GardenDto[]> {
     const userId = req.user.id;
     return this.gardenService.findUserGardens(userId) as any as GardenDto[];
+  }
+
+  //  Cập nhật ESP device cho vườn
+  @ApiOperation({ summary: 'Connect ESP device to garden' })
+  @ApiOkResponse({ 
+    description: 'ESP device connected successfully',
+    type: GardenDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid ESP device or already connected to another garden' })
+  @ApiNotFoundResponse({ description: 'Garden not found or not owned by user' })
+  @Patch(':id/esp-device')
+  async updateEspDevice(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateEspDeviceDto,
+    @Req() req,
+  ): Promise<GardenDto> {
+    const userId = req.user.id;
+    return this.gardenService.updateEspDevice(id, dto.espId, userId) as any as GardenDto;
   }
 
   //  Xóa vườn của user

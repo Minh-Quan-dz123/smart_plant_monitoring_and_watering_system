@@ -2,14 +2,35 @@ import { Injectable, BadRequestException, NotFoundException, ForbiddenException 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateScheduleDto } from './dto/createSchedule.dto';
 import { UpdateScheduleDto } from './dto/updateSchedule.dto';
+import { MqttService } from 'src/mqtt/mqtt.service';
 
 @Injectable()
 export class ScheduleService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private mqttService: MqttService) {}
+
+  private async publishGardenSchedules(gardenId: number) {
+    const schedules = await this.prisma.schedule.findMany({
+      where: { gardenId, enabled: true },
+      orderBy: [{ date: 'asc' }, { time: 'asc' }],
+    });
+
+    const payload = JSON.stringify({
+      schedules: schedules.map((s) => ({
+        id: s.id,
+        date: s.date ? s.date.toISOString().slice(0, 10) : null,
+        time: s.time,
+        duration: s.durationSeconds,
+        repeat: s.repeat ?? null,
+      })),
+    });
+
+    const topic = `iot/schedule/${gardenId}`;
+    this.mqttService.publish(topic, payload);
+  }
 
   // Tạo schedule mới cho vườn
   async createSchedule(createScheduleDto: CreateScheduleDto, userId: number) {
-    const { time, duration, gardenId } = createScheduleDto;
+    const { date, time, durationSeconds, repeat, gardenId } = createScheduleDto;
 
     // Kiểm tra vườn có tồn tại không
     const garden = await this.prisma.garden.findUnique({
@@ -24,11 +45,18 @@ export class ScheduleService {
       throw new ForbiddenException('Bạn không có quyền tạo lịch tưới cho vườn này');
     }
 
+    // Validate logic: nếu repeat không có -> phải có date (lịch 1 lần)
+    if ((!repeat || repeat === 'once') && !date) {
+      throw new BadRequestException('Lịch 1 lần cần có date');
+    }
+
     // Tạo schedule
-    return this.prisma.schedule.create({
+    const created = await this.prisma.schedule.create({
       data: {
+        date: date ? new Date(date) : null,
         time,
-        duration,
+        durationSeconds,
+        repeat: repeat ?? (date ? 'once' : null),
         gardenId,
       },
       include: {
@@ -39,6 +67,11 @@ export class ScheduleService {
         },
       },
     });
+
+    // Publish toàn bộ schedules của vườn sang ESP
+    await this.publishGardenSchedules(gardenId);
+
+    return created;
   }
 
   // Lấy tất cả schedule của một vườn
@@ -141,10 +174,14 @@ export class ScheduleService {
       throw new ForbiddenException('Bạn không có quyền cập nhật lịch tưới này');
     }
 
+    // Chuẩn hóa dữ liệu update
+    const data: any = { ...updateScheduleDto };
+    if (data.date) data.date = new Date(data.date);
+
     // Cập nhật schedule
-    return this.prisma.schedule.update({
+    const updated = await this.prisma.schedule.update({
       where: { id },
-      data: updateScheduleDto,
+      data,
       include: {
         garden: {
           include: {
@@ -153,6 +190,11 @@ export class ScheduleService {
         },
       },
     });
+
+    // Publish toàn bộ schedules của vườn sang ESP
+    await this.publishGardenSchedules(schedule.gardenId);
+
+    return updated;
   }
 
   // Xóa schedule
@@ -174,9 +216,14 @@ export class ScheduleService {
       throw new ForbiddenException('Bạn không có quyền xóa lịch tưới này');
     }
 
-    return this.prisma.schedule.delete({
+    const deleted = await this.prisma.schedule.delete({
       where: { id },
     });
+
+    // Publish toàn bộ schedules của vườn sang ESP
+    await this.publishGardenSchedules(schedule.gardenId);
+
+    return deleted;
   }
 }
 

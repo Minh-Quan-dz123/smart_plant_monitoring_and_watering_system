@@ -56,40 +56,13 @@ export class SensorController {
   }
 
   /**
-   * Lấy lịch sử dữ liệu sensor của một vườn
-   */
-  @ApiOperation({ summary: 'Get sensor history for a garden' })
-  @ApiOkResponse({ description: 'Sensor history retrieved successfully' })
-  @ApiNotFoundResponse({ description: 'Garden not found' })
-  @Get('garden/:gardenId/history')
-  async getSensorHistory(
-    @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Req() req,
-  ) {
-    // Kiểm tra user có quyền xem vườn này không
-    const garden = await this.prisma.garden.findUnique({
-      where: { id: gardenId },
-    });
-
-    if (!garden) {
-      throw new NotFoundException('Vườn không tồn tại');
-    }
-
-    if (garden.userId !== req.user.id) {
-      throw new NotFoundException('Bạn không có quyền xem dữ liệu sensor của vườn này');
-    }
-
-    return this.sensorService.getSensorHistory(gardenId, 100);
-  }
-
-  /**
    * Lấy tất cả dữ liệu sensor của user (tất cả vườn)
    */
   @ApiOperation({ summary: 'Get all sensor data for current user' })
   @ApiOkResponse({ description: 'Sensor data retrieved successfully' })
   @Get('user/all')
   async getUserSensorData(@Req() req) {
-    return this.sensorService.getUserSensorData(req.user.id, 50);
+    return this.sensorService.getUserSensorData(req.user.id);
   }
 }
 
