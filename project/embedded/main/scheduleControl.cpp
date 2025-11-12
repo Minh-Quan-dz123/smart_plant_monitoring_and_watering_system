@@ -1,67 +1,101 @@
 #include "scheduleControl.h"
 
+
+#include <LittleFS.h>
+#include <ArduinoJson.h>
+
+
+using namespace std;
+
 const char* scheduleFile = "/schedule.json";
 vector<Schedule> schedules;
 
-// tạo 2 hàm cơ bản 
-void loadSchedules() // lấy dữ liệu từ file -> RAM
+void loadSchedules()
 {
-  if(!LittleFS.exists(scheduleFile))// nếu chưa có file (nếu lỡ xóa)
+  // 1 xóa vector cũ đi
+  // 2 Load JSON từ file vào 1 object JSON
+  // 3 lưu từ JSON vào vector
+
+  schedules.clear();// xóa vector cũ
+  if(!LittleFS.begin()) // kiểm tra có khởi động được ko
   {
-    File file = LittleFS.open(scheduleFile, "w"); // mở/ tạo ra 1 file để ghi
+    Serial.println("Little ko begin de load");
+    return;
+  }
+
+  // kiểm tra có file trc đó ko
+  if(!LittleFS.exists(scheduleFile))
+  {
+    // nếu ko có thì tạo
+    File file = LittleFS.open(scheduleFile, "w");
+    if(!file)
+    {
+      Serial.println("ko tao duoc file");
+      return;
+    }
+
+    //khởi tạo file rỗng
     file.print("[]"); file.close();
-    return;
+
   }
 
-  // nếu đã file
-  File file = LittleFS.open(scheduleFile, "r"); // lấy ra để đọc
-  if(!file) 
+  // nếu file có rồi
+  File file = LittleFS.open(scheduleFile, "r");
+  // nếu file là rỗng thì thôi
+  if(file.size() == 0) 
   {
-    Serial.println("ko the mo file de doc");
-    return;
-  }
-
-  // Tạo Json động với dung lương bộ nhớ 2048 để chứa nội dung đọc từ flash ra
-  // để làm việc
-  DynamicJsonDocument docData(2048);
-
-  // kiểm tra nguồn dữ liệu JSON có đọc thành công ko hay bị lỗi (file -> doData)
-  DeserializationError error_json = deserializeJson(docData, file);
-  if(error_json)
-  {
-    Serial.println("error reading data from file");
     file.close();
     return;
   }
-
-  // nếu nguồn json được ra oke thì lại tiếp tục đẩy 
-  // data từ chuỗi json -> vector
-  schedules.clear();// đoạn sạch vector trước
-  for(JsonObject obj : docData.as<JsonArray>()) // chuyển hóa thành mảng Json
+  // nếu có nội dung thì lấy ra
+  StaticJsonDocument<1152> doc; // 1 Schedule chiếm 9 byte, 1152 chứa 128 Shedule
+  DeserializationError err = deserializeJson(doc, file);// file -> JSON
+  file.close();
+  if(err)
   {
-    Schedule gan;
-    gan.day = obj["day"];
-    gan.hour = obj["hour"];
-    gan.minute = obj["minute"];
-    gan.second = obj["second"];
-    gan.wateringDuration = obj["wateringDuration"];
-    
-    // xong thì đẩy vào vector
-    schedules.push_back(gan);
+    Serial.print(" loi file -> json");
+    Serial.println(err.c_str());
+    return;
   }
-  file.close(); return;
 
+  // nếu ko lỗi thì lưu JSON -> vector
+  for(JsonObject obj : doc.as<JsonArray>())
+  {
+    Schedule x;
+    x.year   = obj["year"] | 0; // nếu sai tên thuộc tính
+    x.month  = obj["month"] | 0;
+    x.day    = obj["day"] | 0;
+    x.hour   = obj["hour"] | 0;
+    x.minute = obj["minute"] | 0;
+    x.second = obj["second"] | 0;
+    x.wateringDuration = obj["wateringDuration"] | 0;
+    
+    schedules.push_back(x);
+  }
+
+  for(const auto &a: schedules)
+  {
+    Serial.print("year: "); Serial.print(a.year); Serial.print(" , ");
+    Serial.print("month: "); Serial.print(a.month); Serial.print(" , ");
+    Serial.print("day: "); Serial.print(a.day); Serial.print(" , ");
+    Serial.print("minute: "); Serial.print(a.minute); Serial.print(" , ");
+    Serial.print("second: "); Serial.print(a.second); Serial.print(" , ");
+    Serial.print("wateringDuration: "); Serial.println(a.wateringDuration); 
+  }
+  
 }
 
-void saveSchedule() // lưu dữ liệu từ RAM vào file trong bộ nhớ flash
+// save
+void saveSchedules()
 {
-  DynamicJsonDocument docData(2048);
-  JsonArray arr = docData.to<JsonArray>();
-
-  // lưu dữ liệu từ mảng schedules vào docData
-  for(auto &s: schedules)
+  // lưu từ vector->Json
+  StaticJsonDocument<1152> doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for(const auto &s : schedules)
   {
-    JsonObject obj = arr.createNestedObject(); // tạo 1 object bên trong 1 mảng json (arr)
+    JsonObject obj = arr.createNestedObject();
+    obj["year"] = s.year;
+    obj["month"] = s.month;
     obj["day"] = s.day;
     obj["hour"] = s.hour;
     obj["minute"] = s.minute;
@@ -69,110 +103,45 @@ void saveSchedule() // lưu dữ liệu từ RAM vào file trong bộ nhơ�
     obj["wateringDuration"] = s.wateringDuration;
   }
 
-  File file = LittleFS.open(scheduleFile, "w");// mở file để viết
+  // lưu Json -> flash
+  File file = LittleFS.open(scheduleFile, "w");
   if(!file)
   {
-    Serial.println("cannot open file for writing");
-    return;
+    Serial.println("file bi loi open"); return;
   }
-
-  // lưu dữ liệu từ docData vào file
-  serializeJsonPretty(docData, file);
+  if(serializeJson(doc, file) == 0) // nếu ko ghi được gì
+  {
+    Serial.println("ko gi duoc tu json -> file");
+  }
   file.close();
 
-  //
+  for(const auto &a: schedules)
+  {
+    Serial.print("year: "); Serial.print(a.year); Serial.print(" , ");
+    Serial.print("month: "); Serial.print(a.month); Serial.print(" , ");
+    Serial.print("day: "); Serial.print(a.day); Serial.print(" , ");
+    Serial.print("minute: "); Serial.print(a.minute); Serial.print(" , ");
+    Serial.print("second: "); Serial.print(a.second); Serial.print(" , ");
+    Serial.print("wateringDuration: "); Serial.println(a.wateringDuration); 
+  }
 }
 
-// 0 khởi tạo lịch
-void initScheduleStorage()
+void addSchedule(uint8_t index, const Schedule &x)
 {
-  if(!LittleFS.begin())// nếu ko thể khởi tạo LittleFS thì báo cáo
+  if(index > 127)// vượt quá không gian lưu trữ
   {
-    Serial.println("ko the tao LittleFS");
+    Serial.println("index > 127 => vuot qua khong gian luu tru");
     return;
   }
 
-  // nếu có thì tạo file
-  if(!LittleFS.exists(scheduleFile))
-  { // kiểm tra file nào có tồn tại ko
-    File file = LittleFS.open(scheduleFile, "w"); // nếu có thì mở ra để viết
-    file.print("[]"); // ghi để tượng trưng cho đây là file json
-    file.close();
-  }
+  schedules.insert(schedules.begin()+index, x);
+  saveSchedules(); // lưu
 
-  // sau khi tạo file trên flash rồi thì mang ra RAM để làm việc trên RAM(schedules)
-  loadSchedules();
-  Serial.println("tao file schedule.json hoan tat");
 }
 
-// 1 lấy lịch ở vị trí index cho trước
-Schedule getScheduleAt(int index)
+void deleteSchedule(int8_t index)
 {
-  if(index < 0 || index >= schedules.size()) return {0,0,0,0,0};
-  return schedules[index];
+  if(index == -1) schedules.clear();
+  else schedules.erase(schedules.begin() + index);
+  saveSchedules();
 }
-
-// 2 lấy ra số lượng lịch hiện có
-int getScheduleCount()
-{
-  return schedules.size();
-}
-
-// 3 lấy ra danh sách các lịch
-vector<Schedule> getAllSchedule()
-{
-  return schedules;
-}
-
-// 4 lấy ra danh sách lịch có ngày cho trước
-vector<Schedule> getScheduleByDay(int day)
-{
-  vector<Schedule> listScheduleByDay;
-  for(auto &x : schedules)
-  {
-    if(x.day == day)
-    {
-      listScheduleByDay.push_back(x);
-    }
-  }
-  return listScheduleByDay;
-}
-
-// 5 xóa lịch ở vị trí index
-void deleteSchedule(int index)
-{
-  if(index == -99) // lệnh xóa hết lịch
-  {
-    schedules.clear();
-    saveSchedule();
-    return;
-  }
-
-  if(index < 0 || index > schedules.size()) return;
-
-  schedules.erase(schedules.begin() + index);
-  // xóa trên ram sau đó lưu lại vào flash
-  saveSchedule();
-}
-
-// 6 thêm lịch ở vị trí index
-void addSchedule(int index, const Schedule &x)
-{
-  if(index < 0 || index > schedules.size()) return;
-  schedules.insert(schedules.begin() + index, x);
-  // lưu vào flash
-  saveSchedule();
-}
-
-// 7 sắp xếp các lịch từ bé -> lớn 
-/*
-void sortSchedules()
-{
-  sort(schedules.begin(), schedules.end(), [](const Schedule &a, const Schedule &b){
-    if(a.day != b.day) return a.day < b.day;
-    if(a.hour != b.hour) return a.hour < b.hour;
-    if(a.minute != b.minute) return a.minute < b.minute;
-    return a.second < b.second;
-  });
-  saveSchedule();
-}*/

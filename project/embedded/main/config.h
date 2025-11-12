@@ -14,6 +14,7 @@
 
 // 2.2 dht
 #include "DHT11Control.h"
+#include "soil.h"
 // 2.3 lịch tưới cây
 #include "cycleControl.h"
 #include "scheduleControl.h"

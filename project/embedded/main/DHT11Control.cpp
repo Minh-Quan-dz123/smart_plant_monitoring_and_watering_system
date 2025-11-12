@@ -1,22 +1,25 @@
 #include "DHT11Control.h"
 
-DHT dht11(D2, DHT11);
+DHT dht(DHT_PIN, DHT11);
 
-void initDHT11()
+
+void initDHT()
 {
-  dht11.begin();
+  dht.begin();
+  delay(100);
 }
+
 
 float getTemp()
 {
-  float x = dht11.readTemperature();
+  float x = dht.readTemperature();
   if(isnan(x)) return 0;
   return x;
 }
 
 float getHum()
 {
-  float x = dht11.readHumidity();
+  float x = dht.readHumidity();
   if(isnan(x)) return 0;
   return x;
 }
