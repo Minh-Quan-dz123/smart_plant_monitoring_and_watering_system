@@ -4,19 +4,21 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-extern uint32_t fixed_cycle; // cứ sau bao lâu thì tưới
-extern uint16_t wateringDurationFixedCycle; // tưới bao lâu
+extern uint8_t status;
+extern uint16_t wateringTime;
+extern uint32_t bioCycle;
 
-extern uint32_t biological_cycle;
-extern uint16_t wateringDurationBioCycle;
-
-extern uint8_t status;// trạng thái là đang tưới loại nào
-
-// A hàm lưu dữ liệu từ ram vào flash(khởi động)
+// 1 hàm lưu dữ liệu từ ram vào flash(khởi động)
 void saveCycle();
 
-// B hàm lấy dữ liệu từ flash ra ram để chạy
+// 2 hàm lấy dữ liệu từ flash ra ram để chạy
 void loadEEPROM();
+
+// 3 set status == 2;
+void setBioCycle(uint32_t newBioCycle, uint16_t newWateringTime);
+
+// 4 clear
+void clearEEPROM();
 
 
 #endif

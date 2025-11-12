@@ -1,96 +1,67 @@
 #include "WateringService.h"
 
-// controller -> schedule
-#include "scheduleControl.h"
-
-#include "cycleControl.h"
-
-#include "DS3231Control.h"
-
-// tìm tới lịch hiện tại đang cần set
-// lấy vector<Schedule> schedules ra để check
-int vt_lich_crr = 0;
-int wateringDuration = 0;
-int sizeVT = schedules.size();
 
 
-// cài đặt vị trí con trỏ trỏ vào lịch đang so sánh
-void setPointerSchedule()
-{
-  if(sizeVT == 0) return;
-  vt_lich_crr = 0; 
-  Schedule s = schedules[vt_lich_crr];
-  while(isTimeReached(s.day, s.hour, s.minute, s.second) >= 0)// nếu đã qua giờ thì tìm tiếp
-  {
-    vt_lich_crr++;
-    if(vt_lich_crr == sizeVT) return;
-  }
-  s = schedules[vt_lich_crr];
+uint16_t wateringDuration = 0;
+long long T_bio = 0;
 
-}
 
-// check xem đã đến lịch tưới cây hiện tại chưa
 bool checkIsTimeSchedule()
 {
-  if(vt_lich_crr >= sizeVT) return false;// đã duyệt hết lịch
-
-  Schedule s = schedules[vt_lich_crr];
-  if(isTimeReached(s.day, s.hour, s.minute, s.second) >= 0)// nếu đến giờ
+  if(schedules.size() == 0) return false;
+  nowTime = rtc.now();
+  Schedule crr = schedules[0];
+  int8_t res = isTimeReached(crr.year, crr.month, crr.day, crr.hour, crr.minute, crr.second);
+  if(res == 0)
   {
-    vt_lich_crr++;
-    wateringDuration = s.wateringDuration;
+    wateringDuration = crr.wateringDuration;
+    schedules.erase(schedules.begin());
     return true;
   }
-
   return false;
+
+}
+
+void setPointer() // lọc danh sach
+{
+  if(schedules.size() == 0) return;
+  nowTime = rtc.now();
+  Schedule crr = schedules[0];
+
+  int8_t index = 0;
+  while(isTimeReached(crr.year, crr.month, crr.day, crr.hour, crr.minute, crr.second) > -1)
+  {
+    index++;
+    if(index >= schedules.size()) break;
+
+    crr = schedules[index]; 
+  }
+  schedules.erase(schedules.begin(), schedules.begin() + index);
+
+}
+
+void addNewSchedule(uint8_t index, const Schedule &x)
+{
+  addSchedule(index, x);
+  setPointer();
 }
 
 
-// cài đặt trang thái tưới cây
-uint32_t T = 1000;
-uint32_t T_copy = 1000;
-void setStatus(uint8_t new_status)
+void managerStatus(uint8_t newStatus)
 {
-  status = new_status;
-  if(status == 1)
+  if(newStatus == status) return;
+
+  if(newStatus == 3) status == 0;
+
+  else
   {
-    setPointerSchedule();
-  }
-  else if(status == 2)// tưới cây theo chu kì cố định
-  {
-    wateringDuration = wateringDurationFixedCycle;
-    T = fixed_cycle;
-    T_copy = T;
-  }
-  else if(status == 3)
-  {
-    wateringDuration = wateringDurationBioCycle;
-    T = biological_cycle;
-    T_copy = T;
+    status = newStatus;
+    if(status == 2)
+    {
+      T_bio =  (long long)bioCycle;
+      wateringDuration = wateringTime;
+    }
+    
   }
   saveCycle();
-}
-
-// cập nhật FixedCycle
-void updateFCycle(uint32_t newFcycle, uint16_t newDuratime)
-{
-  fixed_cycle = newFcycle;
-  wateringDurationFixedCycle = newDuratime;
-  setStatus(status);
-}
-
-// cập nhật BioCycle
-void updateBCycle(uint32_t newBcycle, uint16_t newDuratime)
-{
-  biological_cycle = newBcycle;
-  wateringDurationBioCycle = newDuratime;
-  setStatus(status);
-}
-
-
-// thay đổi trạng thái tưới cây khẩn cấp thành true
-bool PumpEmer = false;
-void emergencyPump()
-{
-  PumpEmer = true;
 }

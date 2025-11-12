@@ -11,9 +11,9 @@ void setWifi()
   Serial.println("\n Begin connecting to wifi  ... ");
   WiFi.beginSmartConfig();// bắt đầu nghe các gói UDP 
 
-  while(!WiFi.smartConfigDone())// chờ nghe SSID và password
+  while(!WiFi.smartConfigDone())// chờ nghe SSID và password từ beginSmartConfig()
   {
-    delay(650);
+    delay(700);
     Serial.println(".....Connecting......");
   }
 

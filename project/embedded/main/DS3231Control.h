@@ -16,10 +16,10 @@ extern DateTime nowTime; // đối tượng thời gian hiện tại
 void beginRTC();
 
 // set real time
-void setRealTime(int year, int month, int day, int hour, int minute, int second); // char có dạng sau
+void setRealTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second); 
 
 // hàm kiểm tra đã đến ngày/giờ/phút/giây hiện tại chưa
-int isTimeReached(int day, int hour, int minute, int second);
+int8_t isTimeReached(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
 
 #endif

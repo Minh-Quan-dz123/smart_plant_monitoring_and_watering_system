@@ -2,13 +2,14 @@
 #define DHT11CONTROL_H
 
 #include<DHT.h>
-#include <Arduino.h>
+
+#define DHT_PIN D2
 
 /// tham số
-extern DHT dht11;
+extern DHT dht;
 
 // khai báo hàm, tham số
-void initDHT11();
+void initDHT(); // bật cả biến
 float getTemp();// lấy ra nhiệt độ kk
 float getHum(); // lấy ra độ ẩm kk
 

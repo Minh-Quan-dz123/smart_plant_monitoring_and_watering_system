@@ -7,32 +7,28 @@ void beginConfig()
   Serial.begin(115200); 
   delay(500);
 
-  // 1 set pump
+  // 1 khởi tạo cycleControl, schedule
+  loadEEPROM();
+  loadSchedules();
+
+  // 2 cảm biến DHT, soil
+  initDHT();
+  initSoil();
+
+  // 3 pump
   initPump();
 
-  // 2 setup DS3231
+  // 4 RTC
   beginRTC();
 
-  //3 setup EEPROM và LittleFS
-  loadEEPROM();
-  initScheduleStorage();
-
-  // 4 setup DHT
-  initDHT11();
-  
-  //5 setup wifi
+  // 5 wifi
   setWifi();
 
-  //6 setup HiveMQ
+  // 6 HiveMQ
   setupMQTT();
 
-  // 7 set con trỏ lịch
-  setPointerSchedule();
-
-  if(status == 4)// chưa từng tạo trạng thái
-  {
-    status = 3;// tưới cây theo chu kì sinh học
-  }
+  // 7 đặt con trỏ
+  setPointer();
 
 
 }

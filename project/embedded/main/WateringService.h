@@ -2,23 +2,23 @@
 #define WATERINGSERVICE_H
 
 #include <Arduino.h>
+#include "scheduleControl.h"
+#include "cycleControl.h"
+#include "DS3231Control.h"
 
-extern int vt_lich_crr;// lịch gì đang được set
-extern int wateringDuration;// tưới cây bao lâu
+extern uint16_t wateringDuration;// biến toàn cục cho tưới cây
+extern long long T_bio; // chu kì tưới cây theo độ chịu hạn
 
-// hàm xử lý check lịch tưới cây đã đến chưa nếu tưới theo lịch cá nhân
-void setPointerSchedule(); // set con trỏ tưới vị trí lịch thích hợp (để tối ưu hàm so sánh)
+// 1 hàm xử lý check lịch tưới cây đã đến chưa nếu tưới theo lịch cá nhân
 bool checkIsTimeSchedule(); // so sánh đã tới lịch chưa
+void setPointer();
+void addNewSchedule(uint8_t index, const Schedule &x);
 
-void setStatus(uint8_t new_status); // quản lý trạng thái
-extern uint32_t T; // chu kì tưới
-extern uint32_t T_copy;
-void updateFCycle();
-void updateBCycle();
+// 2 hàm tính tạo thời gian tưới cây
+uint16_t computerWateringDuration(uint8_t status);
 
-// hàm tưới cây khẩn cấp
-extern bool PumpEmer; // tưới cây khẩn cấp
-void emergencyPump();
+// 3 quản lý trạng thái
+void managerStatus(uint8_t newStatus);
 
 
 #endif

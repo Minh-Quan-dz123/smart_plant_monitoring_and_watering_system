@@ -1,73 +1,65 @@
 #include "cycleControl.h"
 
-uint32_t fixed_cycle;
-uint16_t wateringDurationFixedCycle;
-
-uint32_t biological_cycle;
-uint16_t wateringDurationBioCycle;
-
-uint8_t status;
+uint32_t bioCycle; // 4 byte
+uint16_t wateringTime; // 2 byte
+uint8_t status; // 1 byte
+uint8_t flag;// 1 byte
 
 
-void loadEEPROM()
+void loadEEPROM() // lấy ra từ eeprom ra ram
 {
-  EEPROM.begin(18); // cấp phát 18 byte
-
-  uint8_t flag = EEPROM.read(0);// đọc dữ liệu ở byte thứ 0 để kiểm tra
-  if(flag != 0xAA) // tự quy định để kiểm tra dữ liệu
+  EEPROM.begin(10); // cấp phát 10 byte
+  // byte đầu: 123 thì là đã có dữ liệu, khác tức là ko có
+   EEPROM.get(0, flag);
+  if(flag == 123)
   {
-    Serial.println("EEPROM chua co du lieu gi");
-    fixed_cycle = 10000;
-    wateringDurationFixedCycle = 1000;
-    biological_cycle = 10000;
-    wateringDurationBioCycle = 1000;
-    status = 3; // tưới theo chu kì sinh học
-
-    EEPROM.write(0,0xAA);// đánh dấu là đã lưu;
-    EEPROM.put(1, fixed_cycle);
-    EEPROM.put(5, wateringDurationFixedCycle);
-    EEPROM.put(7, biological_cycle);
-    EEPROM.put(11,wateringDurationBioCycle);
-    EEPROM.put(13,status);
-    EEPROM.commit();
+    EEPROM.get(1,status); // lấy từ index = 1;
+    EEPROM.get(2, wateringTime);
+    EEPROM.get(4, bioCycle);
   }
-  else // có dữ liệu từ trước
+  else
   {
-    EEPROM.get(1, fixed_cycle);
-    EEPROM.get(5, wateringDurationFixedCycle);
-    EEPROM.get(7, biological_cycle);
-    EEPROM.get(11,wateringDurationBioCycle);
-    EEPROM.get(13,status);
-    Serial.println("da lay du lieu tu EEPROM");
-    
+    status = 0;// chưa có gì
+    wateringTime = 0;
+    bioCycle = 0;
   }
-
-  EEPROM.end();
-
-  Serial.print("fixed_cycle = ");
-  Serial.print(fixed_cycle);
-  Serial.print(", biological_cycle = ");
-  Serial.println(biological_cycle);
-  Serial.print(", status = ");
-  Serial.println(status);
+  // lấy ra xong rồi end;
+  EEPROM.end(); // giải phóng 10 byte đã cấp phát
   
 }
 
 void saveCycle()
 {
-  EEPROM.begin(18); // cấp phát 20 byte
-
-  EEPROM.put(1, fixed_cycle);// lưu vào
-  EEPROM.put(5, wateringDurationFixedCycle);// lưu vào
-  EEPROM.put(7, biological_cycle);
-  EEPROM.put(11, wateringDurationBioCycle);
-  EEPROM.put(13, status);
+  EEPROM.begin(10); // cấp phát 10 byte
+  flag = 123;
+  EEPROM.put(0, flag);// lưu vào
+  EEPROM.put(1, status);// lưu vào
+  EEPROM.put(2, wateringTime);
+  EEPROM.put(4, bioCycle);
   EEPROM.commit(); // xác nhận
   EEPROM.end();
 
-  Serial.print("da luu 2 du lieu la: ");
-  Serial.print(fixed_cycle);
-  Serial.print(", ");
-  Serial.println(biological_cycle);
+  Serial.print("da luu vao eeprom: ");
+  Serial.print(flag); Serial.print(", ");
+  Serial.print(status); Serial.print(", ");
+  Serial.print(wateringTime); Serial.print(", ");
+  Serial.println(bioCycle);
+}
+
+void setBioCycle(uint32_t newBioCycle, uint16_t newWateringTime)
+{
+  wateringTime = newWateringTime;
+  bioCycle = newBioCycle;
+  saveCycle();
+}
+
+void clearEEPROM()
+{
+  EEPROM.begin(10);
+  flag = 101;
+  EEPROM.put(0,flag);
+  EEPROM.commit();
+  EEPROM.end();
+  Serial.println("da clear EEPROM");
 }
 
