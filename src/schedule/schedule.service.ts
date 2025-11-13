@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateScheduleDto } from './dto/createSchedule.dto';
 import { UpdateScheduleDto } from './dto/updateSchedule.dto';
@@ -6,15 +6,64 @@ import { MqttService } from 'src/mqtt/mqtt.service';
 
 @Injectable()
 export class ScheduleService {
+  private readonly logger = new Logger(ScheduleService.name);
+  
   constructor(private prisma: PrismaService, private mqttService: MqttService) {}
 
   private async publishGardenSchedules(gardenId: number) {
+    // Lấy thông tin vườn để có espId
+    const garden = await this.prisma.garden.findUnique({
+      where: { id: gardenId },
+    });
+
+    if (!garden || !garden.espId || garden.espId === '-1') {
+      this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device`);
+      return;
+    }
+
     const schedules = await this.prisma.schedule.findMany({
       where: { gardenId, enabled: true },
       orderBy: [{ date: 'asc' }, { time: 'asc' }],
     });
 
-    const payload = JSON.stringify({
+    // Gửi từng schedule riêng lẻ với topic mới: schedules/esp_id/add/{position}
+    for (let i = 0; i < schedules.length; i++) {
+      const schedule = schedules[i];
+      const position = i + 1; // Vị trí bắt đầu từ 1
+
+      // Parse time (HH:MM) thành hour, minute, second
+      const [hour, minute] = schedule.time.split(':').map(Number);
+      const second = 0;
+
+      // Xác định year, month, day
+      let year: number, month: number, day: number;
+      if (schedule.date) {
+        const date = new Date(schedule.date);
+        year = date.getFullYear();
+        month = date.getMonth() + 1;
+        day = date.getDate();
+      } else {
+        // Nếu không có date (lịch lặp), dùng ngày hiện tại
+        const now = new Date();
+        year = now.getFullYear();
+        month = now.getMonth() + 1;
+        day = now.getDate();
+      }
+
+      await this.mqttService.sendScheduleAdd(garden.espId, {
+        position,
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        duration: schedule.durationSeconds,
+      });
+    }
+
+    // Giữ lại topic cũ để tương thích ngược
+    const legacyPayload = JSON.stringify({
       schedules: schedules.map((s) => ({
         id: s.id,
         date: s.date ? s.date.toISOString().slice(0, 10) : null,
@@ -23,9 +72,8 @@ export class ScheduleService {
         repeat: s.repeat ?? null,
       })),
     });
-
-    const topic = `iot/schedule/${gardenId}`;
-    this.mqttService.publish(topic, payload);
+    const legacyTopic = `iot/schedule/${gardenId}`;
+    this.mqttService.publish(legacyTopic, legacyPayload);
   }
 
   // Tạo schedule mới cho vườn

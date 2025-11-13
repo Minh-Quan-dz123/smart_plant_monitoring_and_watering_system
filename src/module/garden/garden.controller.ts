@@ -46,6 +46,15 @@ export class GardenController {
     return this.gardenService.createGarden(dto, userId) as any as GardenDto;
   }
 
+  //xem vuon bang id
+  @ApiOperation({ summary: 'Get garden by id' })
+  @ApiOkResponse({ description: 'Garden retrieved successfully', type: GardenDto })
+  @ApiNotFoundResponse({ description: 'Garden not found' })
+  @Get(':id')
+  async findGardenById(@Param('id', ParseIntPipe) id: number): Promise<GardenDto> {
+    return this.gardenService.findGardenById(id) as any as GardenDto;
+  }
+  
   //  Lấy danh sách vườn của user hiện tại
   @ApiOperation({ summary: 'Get all gardens of current user' })
   @ApiOkResponse({

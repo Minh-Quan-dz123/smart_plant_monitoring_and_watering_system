@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGardenDto } from './dto/createGarden.dto';
 import { MqttService } from '../../mqtt/mqtt.service';
@@ -22,7 +22,7 @@ export class GardenService {
     });
     if (!plant) throw new BadRequestException('Cây không tồn tại trong thư viện.');
 
-    // Đảm bảo ESPDevice placeholder với espId = "-1" tồn tại
+   //tao esp ao voi id = -1 de set mac dinh cho vườn chưa kết nối ESP device
     const placeholderEsp = await this.prisma.espDevice.findUnique({
       where: { espId: "-1" },
     });
@@ -52,6 +52,33 @@ export class GardenService {
         espDevice: true,
       },
     });
+  }
+  //xem vuon bang id
+  async findGardenById(gardenId: number) {
+    const garden = await this.prisma.garden.findUnique({
+      where: { id: gardenId },
+      include: {
+        plant: {
+          select: {
+            name: true,
+          },
+        },
+        espDevice: {
+          select: {
+            espId: true,
+            temperature: true,
+            airHumidity: true,
+            soilMoisture: true,
+          },
+        },
+      },
+    });
+  
+    if (!garden) {
+      throw new NotFoundException('Không tìm thấy vườn.');
+    }
+  
+    return garden;
   }
 
   // Cập nhật ESP device cho vườn
@@ -135,7 +162,6 @@ export class GardenService {
   async findUserGardens(userId: number) {
     return this.prisma.garden.findMany({
       where: { userId },
-      include: { plant: true },
     });
   }
 

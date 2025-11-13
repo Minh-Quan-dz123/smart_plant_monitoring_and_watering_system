@@ -17,6 +17,4 @@ export class GardenDto {
   @ApiProperty({ example: 'manual', enum: ['manual', 'schedule', 'auto'] })
   irrigationMode: string;
 
-  @ApiProperty({ type: () => PlantDto })
-  plant?: PlantDto;
 }
