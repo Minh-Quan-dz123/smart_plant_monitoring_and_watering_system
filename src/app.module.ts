@@ -10,9 +10,10 @@ import { IrrigationModule } from './irrigation/irrigation.module';
 import { PlantModule } from './module/plant/plant.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { MqttModule } from './mqtt/mqtt.module';
+import { LogModule } from './log/log.module';
 
 @Module({
-  imports: [AuthModule, UserModule, GardenModule, SensorModule, IrrigationModule, PlantModule, ScheduleModule, MqttModule],
+  imports: [AuthModule, UserModule, GardenModule, SensorModule, IrrigationModule, PlantModule, ScheduleModule, MqttModule, LogModule],
   controllers: [AppController],
   providers: [AppService],
 })

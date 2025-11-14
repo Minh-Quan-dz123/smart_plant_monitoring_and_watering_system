@@ -26,7 +26,7 @@ export class ScheduleService {
       orderBy: [{ date: 'asc' }, { time: 'asc' }],
     });
 
-    // Gửi từng schedule riêng lẻ với topic mới: schedules/esp_id/add/{position}
+    // Gửi từng schedule riêng lẻ với topic : schedules/esp_id/add/{position}
     for (let i = 0; i < schedules.length; i++) {
       const schedule = schedules[i];
       const position = i + 1; // Vị trí bắt đầu từ 1

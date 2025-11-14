@@ -33,14 +33,14 @@ export class IrrigationService {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
       include: { plant: true },
-    });
+    }) as any;
 
     if (!garden) {
       throw new NotFoundException(`Vườn với ID ${gardenId} không tồn tại`);
     }
 
-    // Chỉ kiểm tra nếu chế độ là AUTO
-    if (garden.irrigationMode !== IrrigationMode.AUTO) {
+    // Chỉ kiểm tra nếu chế độ AUTO được bật
+    if (!garden.autoEnabled) {
       return [];
     }
 
@@ -185,7 +185,11 @@ export class IrrigationService {
   /**
    * Cập nhật chế độ tưới cho vườn
    */
-  async updateIrrigationMode(gardenId: number, mode: IrrigationMode, userId: number): Promise<void> {
+  async updateIrrigationModes(
+    gardenId: number,
+    modes: { autoEnabled?: boolean; scheduleEnabled?: boolean },
+    userId: number,
+  ): Promise<void> {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
     });
@@ -198,22 +202,38 @@ export class IrrigationService {
       throw new NotFoundException('Bạn không có quyền thay đổi chế độ tưới của vườn này');
     }
 
+    const updateData: { autoEnabled?: boolean; scheduleEnabled?: boolean } = {};
+    if (modes.autoEnabled !== undefined) {
+      updateData.autoEnabled = modes.autoEnabled;
+    }
+    if (modes.scheduleEnabled !== undefined) {
+      updateData.scheduleEnabled = modes.scheduleEnabled;
+    }
+
     await this.prisma.garden.update({
       where: { id: gardenId },
-      data: { irrigationMode: mode },
+      data: updateData as any,
     });
 
-    this.logger.log(` Đã cập nhật chế độ tưới vườn #${gardenId} thành: ${mode}`);
+    const enabledModes: string[] = [];
+    if (updateData.autoEnabled !== undefined) {
+      enabledModes.push(`Auto: ${updateData.autoEnabled ? 'ON' : 'OFF'}`);
+    }
+    if (updateData.scheduleEnabled !== undefined) {
+      enabledModes.push(`Schedule: ${updateData.scheduleEnabled ? 'ON' : 'OFF'}`);
+    }
+
+    this.logger.log(` Đã cập nhật chế độ tưới vườn #${gardenId}: ${enabledModes.join(', ')}`);
   }
 
   /**
    * Lấy thông tin chế độ tưới của vườn
    */
-  async getIrrigationMode(gardenId: number, userId: number) {
+  async getIrrigationModes(gardenId: number, userId: number) {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
-      select: { id: true, irrigationMode: true, name: true, userId: true },
-    });
+      select: { id: true, name: true, userId: true },
+    }) as any;
 
     if (!garden) {
       throw new NotFoundException(`Vườn với ID ${gardenId} không tồn tại`);
@@ -223,10 +243,16 @@ export class IrrigationService {
       throw new NotFoundException('Bạn không có quyền xem chế độ tưới của vườn này');
     }
 
+    // Lấy lại với đầy đủ thông tin
+    const fullGarden = await this.prisma.garden.findUnique({
+      where: { id: gardenId },
+    }) as any;
+
     return {
-      gardenId: garden.id,
-      gardenName: garden.name,
-      irrigationMode: garden.irrigationMode,
+      gardenId: fullGarden.id,
+      gardenName: fullGarden.name,
+      autoEnabled: fullGarden.autoEnabled || false,
+      scheduleEnabled: fullGarden.scheduleEnabled || false,
     };
   }
 }

@@ -14,7 +14,10 @@ export class GardenDto {
   @ApiProperty({ example: 5 })
   userId: number;
 
-  @ApiProperty({ example: 'manual', enum: ['manual', 'schedule', 'auto'] })
-  irrigationMode: string;
+  @ApiProperty({ example: false, description: 'Bật/tắt chế độ tưới tự động (Auto)' })
+  autoEnabled: boolean;
+
+  @ApiProperty({ example: false, description: 'Bật/tắt chế độ tưới theo lịch (Schedule)' })
+  scheduleEnabled: boolean;
 
 }

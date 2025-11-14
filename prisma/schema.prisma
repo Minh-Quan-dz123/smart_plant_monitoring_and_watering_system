@@ -55,13 +55,16 @@ model Garden {
   plantId     Int
   user        User         @relation(fields: [userId], references: [id])
   userId      Int
-  // Chế độ tưới: "manual" | "schedule" | "auto"
-  irrigationMode String    @default("manual") // manual, schedule, auto
+  // Chế độ tưới - có thể bật nhiều chế độ cùng lúc
+  autoEnabled     Boolean   @default(false) // Tưới tự động khi vượt ngưỡng cảm biến
+  scheduleEnabled Boolean   @default(false) // Tưới theo lịch trình
+  // Manual không cần flag vì user tự bật/tắt thủ công
   // Quan hệ với ESP Device (one-to-many từ ESPDevice side để cho phép nhiều vườn có espId = "-1")
   espDevice   EspDevice?  @relation(fields: [espId], references: [espId], onDelete: SetNull)
   espId       String      @default("-1") // Hashcode ID từ ESP hardware, mặc định "-1" khi chưa kết nối
   irrigations Irrigation[]
   schedules   Schedule[]
+  irrigationLogs IrrigationLog[]
 }
 
 model EspDevice {
@@ -96,4 +99,19 @@ model Schedule {
   enabled   Boolean  @default(true) // Bật/tắt schedule
   garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
   gardenId  Int
+}
+
+model IrrigationLog {
+  id        Int      @id @default(autoincrement())
+  irrigationTime DateTime? // Thời gian tưới 
+  duration  Int      // Thời lượng tưới
+  // Trạng thái: "completed" | "failed" | "cancelled"
+  status    String   @default("completed") // Trạng thái tưới
+  // Loại tưới: "manual" | "schedule" | "auto"
+  type      String   @default("manual") // Loại tưới
+  notes     String? 
+  // Quan hệ với Garden
+  garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  gardenId  Int
+  createdAt DateTime @default(now())
 }

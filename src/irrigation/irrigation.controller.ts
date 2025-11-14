@@ -18,7 +18,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { IrrigationService } from './irrigation.service';
-import { UpdateIrrigationModeDto } from './dto/updateIrrigationMode.dto';
+import { UpdateIrrigationModesDto } from './dto/updateIrrigationModes.dto';
 import { StartIrrigationDto } from './dto/startIrrigation.dto';
 import { AuthGuard } from 'src/auth/guard/guard';
 
@@ -59,33 +59,47 @@ export class IrrigationController {
 
   /**
    * Cập nhật chế độ tưới cho vườn
+   * Có thể bật/tắt từng chế độ độc lập: Auto và Schedule
+   * Manual không cần cập nhật vì user tự bật/tắt thủ công
    */
   @ApiOperation({
-    summary: 'Update irrigation mode for a garden',
-    description: 'Chế độ: manual (thủ công), schedule (theo lịch), auto (tự động khi vượt ngưỡng)',
+    summary: 'Update irrigation modes for a garden',
+    description: 'Có thể bật/tắt Auto và Schedule độc lập. Có thể bật cả 2 cùng lúc.',
   })
-  @ApiOkResponse({ description: 'Irrigation mode updated successfully' })
+  @ApiOkResponse({ description: 'Irrigation modes updated successfully' })
   @ApiNotFoundResponse({ description: 'Garden not found' })
-  @ApiBadRequestResponse({ description: 'Invalid irrigation mode' })
-  @Patch(':gardenId/mode')
-  async updateIrrigationMode(
+  @ApiBadRequestResponse({ description: 'Invalid irrigation modes' })
+  @Patch(':gardenId/modes')
+  async updateIrrigationModes(
     @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Body() dto: UpdateIrrigationModeDto,
+    @Body() dto: UpdateIrrigationModesDto,
     @Req() req,
   ) {
-    await this.irrigationService.updateIrrigationMode(gardenId, dto.mode, req.user.id);
-    return { message: 'Đã cập nhật chế độ tưới', gardenId, mode: dto.mode };
+    await this.irrigationService.updateIrrigationModes(
+      gardenId,
+      {
+        autoEnabled: dto.autoEnabled,
+        scheduleEnabled: dto.scheduleEnabled,
+      },
+      req.user.id,
+    );
+    return {
+      message: 'Đã cập nhật chế độ tưới',
+      gardenId,
+      autoEnabled: dto.autoEnabled,
+      scheduleEnabled: dto.scheduleEnabled,
+    };
   }
 
   /**
    * Lấy thông tin chế độ tưới hiện tại của vườn
    */
-  @ApiOperation({ summary: 'Get current irrigation mode for a garden' })
-  @ApiOkResponse({ description: 'Irrigation mode retrieved successfully' })
+  @ApiOperation({ summary: 'Get current irrigation modes for a garden' })
+  @ApiOkResponse({ description: 'Irrigation modes retrieved successfully' })
   @ApiNotFoundResponse({ description: 'Garden not found' })
-  @Get(':gardenId/mode')
-  async getIrrigationMode(@Param('gardenId', ParseIntPipe) gardenId: number, @Req() req) {
-    return this.irrigationService.getIrrigationMode(gardenId, req.user.id);
+  @Get(':gardenId/modes')
+  async getIrrigationModes(@Param('gardenId', ParseIntPipe) gardenId: number, @Req() req) {
+    return this.irrigationService.getIrrigationModes(gardenId, req.user.id);
   }
 }
 

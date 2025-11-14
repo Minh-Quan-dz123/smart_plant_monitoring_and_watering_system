@@ -4,6 +4,7 @@ import * as mqtt from 'mqtt';
 import { SensorService } from 'src/sensor/sensor.service';
 import { IrrigationService } from 'src/irrigation/irrigation.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { LogService } from 'src/log/log.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
@@ -11,12 +12,24 @@ export class MqttService implements OnModuleInit {
   private client: mqtt.MqttClient;
   // Map để lưu các pending connection checks: espId -> { resolve, reject, timeout }
   private pendingConnectionChecks = new Map<string, { resolve: (status: 'ON' | 'OFF') => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>();
+  // Map để lưu dữ liệu log đang được thu thập: espId -> { year, month, day, hour, minute, second, time }
+  private pendingLogs = new Map<string, {
+    year?: number;
+    month?: number;
+    day?: number;
+    hour?: number;
+    minute?: number;
+    second?: number;
+    duration?: number;
+    timeout?: NodeJS.Timeout;
+  }>();
 
   constructor(
     private sensorService: SensorService,
     @Inject(forwardRef(() => IrrigationService))
     private irrigationService: IrrigationService,
     private prisma: PrismaService,
+    private logService: LogService,
   ) {}
 
   onModuleInit() {
@@ -32,7 +45,7 @@ export class MqttService implements OnModuleInit {
     this.client.on('connect', () => {
       this.logger.log(' Đã kết nối đến HiveMQ!');
       
-      // Subscribe tất cả topics để test (có thể bỏ sau khi hoàn thiện)
+      // test topic
       this.client.subscribe('#', (err) => {
         if (err) {
           this.logger.error(` Lỗi subscribe topic: ${err.message}`);
@@ -238,14 +251,14 @@ export class MqttService implements OnModuleInit {
 
   /**
    * 2. Xử lý log lịch sử tưới từ ESP
-   * Topic format: logs/esp_id/{year, month, day, hour, minute, second, time tưới}
-   * Message format: JSON hoặc string với các giá trị
+   * Topic format: logs/esp_id/{year, month, day, hour, minute, second, time}
+   * Message format: số hoặc string
    */
   private async handleLogsData(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
       const espId = topicParts[1];
-      const logType = topicParts[2]; // year, month, day, hour, minute, second, hoặc time tưới
+      const logType = topicParts[2]; // year, month, day, hour, minute, second, hoặc time
 
       if (!espId || !logType) {
         this.logger.warn(` Topic log không hợp lệ: ${topic}`);
@@ -262,18 +275,106 @@ export class MqttService implements OnModuleInit {
         return;
       }
 
-      // Parse message (có thể là JSON hoặc số)
-      let logData: any;
-      try {
-        logData = JSON.parse(message);
-      } catch {
-        logData = { value: message };
+      // Parse giá trị từ message
+      const value = parseInt(message.trim());
+      if (isNaN(value)) {
+        this.logger.warn(` Giá trị log không hợp lệ từ topic ${topic}: ${message}`);
+        return;
       }
 
-      this.logger.log(` [LOG] ESP ${espId} - Garden ${garden.id} - ${logType}: ${JSON.stringify(logData)}`);
-      
-      // Có thể lưu vào database nếu cần
-      // TODO: Tạo bảng Log nếu cần lưu lịch sử chi tiết
+      // Lấy hoặc tạo pending log data cho espId này
+      let pendingLog = this.pendingLogs.get(espId);
+      if (!pendingLog) {
+        pendingLog = {};
+        this.pendingLogs.set(espId, pendingLog);
+      }
+
+      // Cập nhật giá trị tương ứng
+      switch (logType) {
+        case 'year':
+          pendingLog.year = value;
+          break;
+        case 'month':
+          pendingLog.month = value;
+          break;
+        case 'day':
+          pendingLog.day = value;
+          break;
+        case 'hour':
+          pendingLog.hour = value;
+          break;
+        case 'minute':
+          pendingLog.minute = value;
+          break;
+        case 'second':
+          pendingLog.second = value;
+          break;
+        case 'time':
+          pendingLog.duration = value; // Thời lượng tưới (giây)
+          break;
+        default:
+          this.logger.warn(` Loại log không hợp lệ: ${logType}`);
+          return;
+      }
+
+      // Reset timeout (nếu có)
+      if (pendingLog.timeout) {
+        clearTimeout(pendingLog.timeout);
+      }
+
+      // Kiểm tra xem đã có đủ thông tin chưa
+      if (
+        pendingLog.year &&
+        pendingLog.month &&
+        pendingLog.day !== undefined &&
+        pendingLog.hour !== undefined &&
+        pendingLog.minute !== undefined &&
+        pendingLog.second !== undefined &&
+        pendingLog.duration !== undefined
+      ) {
+        // Tạo Date từ các giá trị
+        const irrigationTime = new Date(
+          pendingLog.year,
+          pendingLog.month - 1, // month là 0-indexed
+          pendingLog.day,
+          pendingLog.hour,
+          pendingLog.minute,
+          pendingLog.second,
+        );
+
+        // Xác định loại tưới từ enabled flags của garden
+        // Ưu tiên: auto > schedule > manual
+        let type = 'manual';
+        if (garden.autoEnabled) {
+          type = 'auto';
+        } else if (garden.scheduleEnabled) {
+          type = 'schedule';
+        }
+
+        // Lưu vào database
+        await this.logService.createIrrigationLog({
+          gardenId: garden.id,
+          irrigationTime,
+          duration: pendingLog.duration,
+          status: 'completed',
+          type,
+          notes: `Tưới tự động từ ESP ${espId}`,
+        });
+
+        this.logger.log(
+          ` [LOG] Đã lưu log tưới cho vườn ${garden.id} - ESP ${espId}: ` +
+          `${irrigationTime.toLocaleString('vi-VN')} - ${pendingLog.duration} giây`,
+        );
+
+        // Xóa pending log
+        this.pendingLogs.delete(espId);
+      } else {
+        // Đặt timeout 5 giây - nếu không nhận đủ thông tin trong 5s thì xóa pending log
+        pendingLog.timeout = setTimeout(() => {
+          this.logger.warn(` Timeout: Không nhận đủ thông tin log từ ESP ${espId}`);
+          this.pendingLogs.delete(espId);
+        }, 5000);
+      }
     } catch (error) {
       this.logger.error(` Lỗi xử lý log: ${error.message}`);
     }

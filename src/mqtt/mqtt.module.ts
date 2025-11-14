@@ -3,12 +3,14 @@ import { MqttService } from './mqtt.service';
 import { SensorModule } from 'src/sensor/sensor.module';
 import { IrrigationModule } from 'src/irrigation/irrigation.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
   imports: [
     SensorModule, 
     forwardRef(() => IrrigationModule),
-    PrismaModule
+    PrismaModule,
+    LogModule,
   ],
   providers: [MqttService],
   exports: [MqttService],
