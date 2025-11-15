@@ -14,7 +14,7 @@ export class ScheduleService {
     // Lấy thông tin vườn để có espId
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
-    });
+    }) as any;
 
     if (!garden || !garden.espId || garden.espId === '-1') {
       this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device`);
@@ -60,6 +60,11 @@ export class ScheduleService {
         second,
         duration: schedule.durationSeconds,
       });
+    }
+
+    // Gửi status = 1 (Schedule) nếu irrigationMode = 'schedule' và có schedule được bật
+    if (schedules.length > 0 && garden.irrigationMode === 'schedule') {
+      await this.mqttService.sendIrrigationStatus(garden.espId, 1);
     }
 
     // Giữ lại topic cũ để tương thích ngược

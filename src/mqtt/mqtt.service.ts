@@ -268,7 +268,7 @@ export class MqttService implements OnModuleInit {
       // Lấy gardenId từ espId
       const garden = await this.prisma.garden.findFirst({
         where: { espId },
-      });
+      }) as any;
 
       if (!garden) {
         this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
@@ -342,14 +342,8 @@ export class MqttService implements OnModuleInit {
           pendingLog.second,
         );
 
-        // Xác định loại tưới từ enabled flags của garden
-        // Ưu tiên: auto > schedule > manual
-        let type = 'manual';
-        if (garden.autoEnabled) {
-          type = 'auto';
-        } else if (garden.scheduleEnabled) {
-          type = 'schedule';
-        }
+        // Xác định loại tưới từ irrigationMode của garden
+        const type = garden.irrigationMode || 'manual';
 
         // Lưu vào database
         await this.logService.createIrrigationLog({
@@ -358,13 +352,40 @@ export class MqttService implements OnModuleInit {
           duration: pendingLog.duration,
           status: 'completed',
           type,
-          notes: `Tưới tự động từ ESP ${espId}`,
+          notes: `Tưới từ ESP ${espId}`,
         });
 
         this.logger.log(
           ` [LOG] Đã lưu log tưới cho vườn ${garden.id} - ESP ${espId}: ` +
           `${irrigationTime.toLocaleString('vi-VN')} - ${pendingLog.duration} giây`,
         );
+
+        // Nếu đang ở chế độ Manual và đã tưới xong, chuyển về OFF
+        if (garden.irrigationMode === 'manual') {
+          // Cập nhật trạng thái tưới về false
+          const currentIrrigation = await this.prisma.irrigation.findFirst({
+            where: {
+              gardenId: garden.id,
+              status: true,
+            },
+            orderBy: { timestamp: 'desc' },
+          });
+
+          if (currentIrrigation) {
+            await this.prisma.irrigation.update({
+              where: { id: currentIrrigation.id },
+              data: { status: false },
+            });
+          }
+
+          // Chuyển về OFF (không có chế độ nào)
+          await this.prisma.garden.update({
+            where: { id: garden.id },
+            data: { irrigationMode: null } as any,
+          });
+
+          this.logger.log(` [LOG] Đã hoàn thành tưới thủ công - Chuyển về OFF (irrigationMode = null)`);
+        }
 
         // Xóa pending log
         this.pendingLogs.delete(espId);
@@ -381,39 +402,88 @@ export class MqttService implements OnModuleInit {
   }
 
   /**
-   * 6. Xử lý trạng thái kết nối/hoạt động từ ESP
+   * 6. Xử lý trạng thái chế độ tưới từ ESP
    * Topic format: selects/esp_id/{status}
-   * Message format: string hoặc JSON với trạng thái
+   * Message format: số (0, 1, 2, 3)
+   * 0: Không chế độ nào (OFF)
+   * 1: Schedule (Tưới theo lịch)
+   * 2: Auto (Tưới theo ngưỡng cảm biến)
+   * 3: Manual (Tưới thủ công)
    */
   private async handleSelectsData(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
       const espId = topicParts[1];
-      const statusType = topicParts[2];
+      const statusValue = topicParts[2] || message.trim();
 
       if (!espId) {
         this.logger.warn(` Topic selects không hợp lệ: ${topic}`);
         return;
       }
 
-      // Cập nhật trạng thái ESPDevice
-      const status = message.trim().toLowerCase();
-      const isConnected = status === 'on' || status === '1' || status === 'true' || status === 'connected';
+      // Parse status (0, 1, 2, 3)
+      const status = parseInt(statusValue);
+      if (isNaN(status) || status < 0 || status > 3) {
+        this.logger.warn(` Status không hợp lệ từ ESP ${espId}: ${statusValue}`);
+        return;
+      }
 
+      // Lấy gardenId từ espId
+      const garden = await this.prisma.garden.findFirst({
+        where: { espId },
+      }) as any;
+
+      if (!garden) {
+        this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
+        return;
+      }
+
+      // Cập nhật trạng thái ESPDevice
       await this.prisma.espDevice.upsert({
         where: { espId },
         update: {
-          isConnected,
+          isConnected: true, // ESP đang gửi status nên đang kết nối
           lastUpdated: new Date(),
         },
         create: {
           espId,
-          isConnected,
+          isConnected: true,
           lastUpdated: new Date(),
         },
       });
 
-      this.logger.log(` [SELECTS] ESP ${espId} - Status: ${status} (isConnected: ${isConnected})`);
+      // Xử lý theo status
+      const statusNames = ['OFF', 'Schedule', 'Auto', 'Manual'];
+      this.logger.log(` [SELECTS] ESP ${espId} - Garden ${garden.id} - Status: ${status} (${statusNames[status]})`);
+
+      // Nếu ESP báo status khác 3 (Manual) và đang ở chế độ Manual
+      // Có nghĩa là ESP đã tưới xong, cần chuyển về OFF
+      if (garden.irrigationMode === 'manual' && status !== 3) {
+        // Kiểm tra xem có đang tưới thủ công không
+        const currentIrrigation = await this.prisma.irrigation.findFirst({
+          where: {
+            gardenId: garden.id,
+            status: true,
+          },
+          orderBy: { timestamp: 'desc' },
+        });
+
+        if (currentIrrigation) {
+          // Cập nhật trạng thái tưới về false
+          await this.prisma.irrigation.update({
+            where: { id: currentIrrigation.id },
+            data: { status: false },
+          });
+
+          // Chuyển về OFF (không có chế độ nào)
+          await this.prisma.garden.update({
+            where: { id: garden.id },
+            data: { irrigationMode: null } as any,
+          });
+
+          this.logger.log(` [SELECTS] ESP ${espId} đã hoàn thành tưới thủ công - Chuyển về OFF (irrigationMode = null)`);
+        }
+      }
     } catch (error) {
       this.logger.error(` Lỗi xử lý selects: ${error.message}`);
     }
@@ -597,6 +667,30 @@ export class MqttService implements OnModuleInit {
       });
     } catch (error) {
       this.logger.error(` Lỗi gửi lệnh gardens: ${error.message}`);
+    }
+  }
+
+  /**
+   * Gửi status chế độ tưới đến ESP
+   * Topic format: selects/esp_id/{status}
+   * @param espId ID của ESP device
+   * @param status 0: OFF, 1: Schedule, 2: Auto, 3: Manual
+   */
+  async sendIrrigationStatus(espId: string, status: 0 | 1 | 2 | 3): Promise<void> {
+    try {
+      const topic = `selects/${espId}/${status}`;
+      const payload = status.toString();
+
+      this.client.publish(topic, payload, (error) => {
+        if (error) {
+          this.logger.error(` Lỗi gửi status đến ESP ${espId}: ${error.message}`);
+        } else {
+          const statusNames = ['OFF', 'Schedule', 'Auto', 'Manual'];
+          this.logger.log(` Đã gửi status đến ESP ${espId}: ${status} (${statusNames[status]})`);
+        }
+      });
+    } catch (error) {
+      this.logger.error(` Lỗi gửi irrigation status: ${error.message}`);
     }
   }
 

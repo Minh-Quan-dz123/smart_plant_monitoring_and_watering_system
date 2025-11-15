@@ -55,10 +55,8 @@ model Garden {
   plantId     Int
   user        User         @relation(fields: [userId], references: [id])
   userId      Int
-  // Chế độ tưới - có thể bật nhiều chế độ cùng lúc
-  autoEnabled     Boolean   @default(false) // Tưới tự động khi vượt ngưỡng cảm biến
-  scheduleEnabled Boolean   @default(false) // Tưới theo lịch trình
-  // Manual không cần flag vì user tự bật/tắt thủ công
+  // Chế độ tưới - chỉ chọn 1 trong 3 chế độ
+  irrigationMode String?   // null: OFF, "schedule": Tưới theo lịch, "auto": Tưới tự động, "manual": Tưới thủ công
   // Quan hệ với ESP Device (one-to-many từ ESPDevice side để cho phép nhiều vườn có espId = "-1")
   espDevice   EspDevice?  @relation(fields: [espId], references: [espId], onDelete: SetNull)
   espId       String      @default("-1") // Hashcode ID từ ESP hardware, mặc định "-1" khi chưa kết nối
@@ -94,7 +92,7 @@ model Schedule {
   time      String
   // Thời lượng tưới tính bằng giây để phù hợp với ESP
   durationSeconds Int
-  // Quy tắc lặp (ví dụ: "once", "daily", "weekly:2" với 2 = thứ 3)
+  // Quy tắc lặp (ví dụ: "daily", "weekly:2" với 2 = thứ 3)
   repeat    String?  // Null nếu là lịch 1 lần (dùng date)
   enabled   Boolean  @default(true) // Bật/tắt schedule
   garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)

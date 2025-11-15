@@ -1,21 +1,16 @@
-import { IsBoolean, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsIn } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UpdateIrrigationModesDto {
+export class UpdateIrrigationModeDto {
   @ApiPropertyOptional({
-    description: 'Bật/tắt chế độ tưới tự động (Auto) - Tưới khi vượt ngưỡng cảm biến',
-    example: true,
+    description: 'Chế độ tưới: null (OFF), "schedule" (Tưới theo lịch), "auto" (Tưới tự động), "manual" (Tưới thủ công)',
+    example: 'schedule',
+    enum: [null, 'schedule', 'auto', 'manual'],
   })
   @IsOptional()
-  @IsBoolean()
-  autoEnabled?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Bật/tắt chế độ tưới theo lịch (Schedule) - Tưới theo lịch trình đã đặt',
-    example: true,
+  @IsIn([null, 'schedule', 'auto', 'manual'], {
+    message: 'Chế độ tưới phải là: null, "schedule", "auto", hoặc "manual"',
   })
-  @IsOptional()
-  @IsBoolean()
-  scheduleEnabled?: boolean;
+  irrigationMode?: string | null;
 }
 
