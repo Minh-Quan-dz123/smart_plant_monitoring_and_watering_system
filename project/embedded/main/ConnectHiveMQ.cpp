@@ -16,10 +16,10 @@
 #include "WateringService.h"
 
 
-const char* mqtt_server ="8c8b67f172b549eba06b16f265f2f580.s1.eu.hivemq.cloud";
+const char* mqtt_server ="394c577c67aa49a8812ab149ec4997dd.s1.eu.hivemq.cloud";//"60294ba1a7534e358c2dc4bc7b7cc9f9.s1.eu.hivemq.cloud";
 const uint16_t mqtt_port = 8883; // tên port
-const char* mqtt_user = "MinhQuan5386";
-const char* mqtt_pass = "ABC";
+const char* mqtt_user = "sang2004";
+const char* mqtt_pass = "Sangdeptrai1";
 const char* esp_id = "0001"; // id của esp
 
 
@@ -48,15 +48,15 @@ void sendDataToHiveMQ(float temp, float hum, float soil)
   client.beginMessage(topic1, false, 1);  // bắt đầu gửi
   client.print(condition);      // gửi payload
   client.endMessage();          // kết thúc gửi
-
+/*
   Serial.print("Da gui topic ");
   Serial.print(topic1);
   Serial.print(": ");
-  Serial.println(condition);
+  Serial.println(condition);*/
 }
 
 // 2 gửi log
-void writeLog(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint8_t time)
+void writeLog(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint16_t time)
 {
   // tạo json
   char log[128];
@@ -69,10 +69,11 @@ void writeLog(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t mi
   client.print(log);      // gửi payload
   client.endMessage();          // kết thúc gửi
 
+/*
   Serial.print("Da gui topic ");
   Serial.print(topic2);
   Serial.print(": ");
-  Serial.println(log);
+  Serial.println(log);*/
 
 }
 
@@ -103,7 +104,7 @@ void callback(int messageSize)
     else if(msg.equalsIgnoreCase("OFF"))
     {
       // tắt dht11, soil, xóa LittleFS
-      deleteSchedule(-1);// 1 xóa littleFS
+      deleteSchedule(0,-1);// 1 xóa littleFS
       clearEEPROM();// 2 xóa eeprom
       status = 0; // 3 tắt tất cả trạng thái
       endSoil(); // 4 tắt soil
@@ -119,12 +120,12 @@ void callback(int messageSize)
     wateringDuration = msg.toInt();
   }
 
-  //3.3 nếu là topic 5: bioCycle, time
+  //3.3 nếu là topic 5: 
   else if(topic.equals(topic5))
   {
     Serial.println(" => nhan duoc topic5: ");
-    // chuỗi gửi về là chuỗi JSON dạng: {bioCycle:  , time: }
-    StaticJsonDocument<50> doc; // tạo object json dài 50 byte để đọc dữ liệu
+    // chuỗi gửi về là chuỗi JSON dạng: {temp,humi, soil, time: }
+    StaticJsonDocument<200> doc; // tạo object json dài 100 byte để đọc dữ liệu
     DeserializationError error = deserializeJson(doc, msg);
     if(error) // kiểm tra có phải dưới JSON không
     {
@@ -132,22 +133,25 @@ void callback(int messageSize)
       Serial.println(error.c_str());
       return;
     }
-    setBioCycle((uint32_t)doc["bioCycle"], (uint16_t)doc["time"]);
 
+    setBioCycle((uint8_t)doc["temp"], (uint8_t)doc["humi"], (uint8_t)doc["soil"], (uint16_t)doc["time"]);
   }
 
   // topic 6 - selects
   else if(topic.equals(topic6))
   {
     uint8_t newStatus = msg.toInt();
-    managerStatus(newStatus);
+    if(newStatus == 3) {status = 0; return;}
 
+    managerStatus(newStatus);
     Serial.println(" => nhan duoc topic6: ");
   }
 
   // topic 7 schedue add
   else if(topic.equals(topic7))
   {
+        /*{"repeat":0,"dayOfWeek":0,"hour":15,"minute":20,"second":30,"time":3}*/
+         /*{"year":2025,"month":11,"day":16,"hour":10,"minute":30,"second":45}*/
     Serial.println(" => nhan duoc topic7: ");
     StaticJsonDocument<256> doc; // tạo object json dài 256 byte để đọc dữ liệu
     DeserializationError error = deserializeJson(doc, msg);
@@ -157,24 +161,64 @@ void callback(int messageSize)
       Serial.println(error.c_str());
       return;
     }
-    uint8_t index = doc["index"];
+    // đầu vào là thứ giờ phút giây => cần lưu => ngày giờ phút giây
     Schedule x;
-    x.year =  doc["year"];
-    x.month = doc["month"];
-    x.day = doc["day"];
+    nowTime = rtc.now();
+    x.repeat =  (int8_t)doc["repeat"];
+    x.year = nowTime.year();
+    x.month = nowTime.month();
+
+    // chuyển đồi từ thứ -> ngày
+    x.day = (uint8_t)doc["dayOfWeek"]; // 
+    // (i,xi), (j,xj), cho i,xi,xj. tìm j
+    // if(xj <= xi) => xi - xj =  i -j => j = i - xi + xj;
+    // else => xj - xi = j - i => j = i - xi + xj
+    // => x.day = nowTime.day() - nowTime.dayOfTheWeek() + x.day;
+    x.day = nowTime.day() - nowTime.dayOfTheWeek() + x.day;
+    // end
+
     x.hour = doc["hour"];
     x.minute = doc["minute"];
     x.second = doc["second"];
-    x.wateringDuration = doc["time"];
-    addSchedule(index, x);
+    x.wateringTime = doc["time"];
+    
+
+    Serial.print("repeat: "); Serial.print(x.repeat);
+    Serial.print(" , year: "); Serial.print(x.year);
+    Serial.print(" , month: "); Serial.print(x.month);
+    Serial.print(" , day: "); Serial.print(x.day);
+    Serial.print(" , hour: "); Serial.print(x.hour);
+    Serial.print(" , minute: "); Serial.print(x.minute);
+    Serial.print(" , second: "); Serial.print(x.second);
+    Serial.print(" , time: "); Serial.println(x.wateringTime);
+    addSchedule(x);
   }
 
   // topic 8 schedue delete
   else if(topic.equals(topic8))
   {
     Serial.println(" => nhan duoc topic8: ");
-    int8_t index = msg.toInt();
-    deleteSchedule(index);
+
+    if(msg == "-1") // xóa hết
+    {
+      deleteSchedule(-1);
+      return;
+    }
+
+    StaticJsonDocument<256> doc; // tạo object json dài 256 byte để đọc dữ liệu
+    DeserializationError error = deserializeJson(doc, msg);
+    if(error) // kiểm tra có phải dưới JSON không
+    {
+      Serial.print("loi json: ");
+      Serial.println(error.c_str());
+      return;
+    }
+    // đầu vào là thứ giờ phút giây => cần lưu => ngày giờ phút giây
+    nowTime = rtc.now();
+    uint8_t x = doc["dayOfWeek"];
+    x = (uint8_t)nowTime.day() - (uint8_t)nowTime.dayOfTheWeek() + x;
+
+    deleteSchedule((int8_t)doc["repeat"], x,(uint8_t)doc["hour"], (uint8_t)doc["minute"], (uint8_t)doc["second"]);
   }
 
   // topic 9 connect cmd
@@ -195,8 +239,9 @@ void callback(int messageSize)
   // topic 11 realtime
   else if(topic.equals(topic11))
   {
+
     Serial.println(" => nhan duoc topic11: ");
-    StaticJsonDocument<256> doc; // tạo object json dài 200 byte để đọc dữ liệu
+    StaticJsonDocument<500> doc; // tạo object json dài 200 byte để đọc dữ liệu
     DeserializationError error = deserializeJson(doc, msg);
     if(error) // kiểm tra có phải dưới JSON không
     {
@@ -204,7 +249,27 @@ void callback(int messageSize)
       Serial.println(error.c_str());
       return;
     }
-    setRealTime((uint16_t)doc["year"], (uint8_t)doc["month"], (uint8_t)doc["day"], (uint8_t)doc["hour"], (uint8_t)doc["minute"], (uint8_t)doc["second"]);
+    uint8_t second = (uint8_t)doc["second"];
+    uint8_t minute = (uint8_t)doc["minute"];
+    uint8_t hour = (uint8_t)doc["hour"];
+    uint8_t day = (uint8_t)doc["day"];
+    if(second >= 59)
+    {
+      second = 0;
+      if(minute >= 59)
+      {
+        minute = 0;
+        if(hour >= 23)
+        {
+          hour = 0;
+          day++;
+        }
+        else hour++;
+      }
+      else minute++;
+    }
+    else second++;
+    setRealTime((uint16_t)doc["year"], (uint8_t)doc["month"], day, hour, minute,second );
   }
 }
 
@@ -220,14 +285,8 @@ void reconnectMQTT()
     espClient.setInsecure();// ko kiểm tra chứng chỉ SSL
     client.setId(esp_id);
     client.setUsernamePassword(mqtt_user, mqtt_pass);
-
-    // thiết lập will
-    client.beginWill(topic10, false, 1);
-    client.print("off");
-    client.endWill();
-
   
-    //xong rồi kết nối tới server 
+    //xong rồi kết nối tới server a
     if(client.connect(mqtt_server, mqtt_port))
     {
       Serial.println("da ket noi voi hivemq");
@@ -237,7 +296,7 @@ void reconnectMQTT()
       const char* topics[] = {topic3, topic4, topic5, topic6, topic7, topic8, topic9, topic11};
       for(int i=0; i<8; i++)
       {
-        if(client.subscribe(topics[i]), 2)
+        if(client.subscribe(topics[i], 2))
         {
           Serial.print("Subscribed: "); Serial.println(topics[i]);
         } 
@@ -246,6 +305,15 @@ void reconnectMQTT()
           Serial.print("Subscribe failed: "); Serial.println(topics[i]);
         }
       }
+      // gửi response tới server bảo là đã kết nối
+      client.beginMessage(topic10);  // bắt đầu gửi
+      client.print("on");      // gửi payload
+      client.endMessage();          // kết thúc gửi
+
+      Serial.print("Da gui topic ");
+      Serial.print(topic10);
+      Serial.print(": ");
+      Serial.println("on");
     }
     else
     {

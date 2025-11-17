@@ -5,8 +5,8 @@
 #include <EEPROM.h>
 
 extern uint8_t status;
+extern uint8_t temp, humi, soil;
 extern uint16_t wateringTime;
-extern uint32_t bioCycle;
 
 // 1 hàm lưu dữ liệu từ ram vào flash(khởi động)
 void saveCycle();
@@ -15,7 +15,7 @@ void saveCycle();
 void loadEEPROM();
 
 // 3 set status == 2;
-void setBioCycle(uint32_t newBioCycle, uint16_t newWateringTime);
+void setBioCycle(uint8_t newTemp,uint8_t newHumi, uint8_t newSoil, uint16_t newWateringTime);
 
 // 4 clear
 void clearEEPROM();
