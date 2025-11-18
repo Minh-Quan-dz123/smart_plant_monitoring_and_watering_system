@@ -22,4 +22,31 @@ export class GardenDto {
   })
   irrigationMode: string | null;
 
+  @ApiProperty({
+    example: 'idle',
+    description: 'Trạng thái bơm hiện tại: idle | pending | on | off | error',
+  })
+  pumpStatus: string;
+
+  @ApiProperty({
+    example: 'Đang chờ ESP phản hồi',
+    required: false,
+    nullable: true,
+  })
+  pumpStatusMessage?: string | null;
+
+  @ApiProperty({
+    example: '2025-11-18T10:00:00.000Z',
+    required: false,
+    nullable: true,
+  })
+  lastPumpFeedbackAt?: Date | null;
+
+  @ApiProperty({
+    example: true,
+    required: false,
+    nullable: true,
+    description: 'Kết quả phản hồi gần nhất từ ESP',
+  })
+  lastPumpSuccess?: boolean | null;
 }

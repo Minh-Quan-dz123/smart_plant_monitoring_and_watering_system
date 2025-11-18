@@ -29,9 +29,7 @@ import { AuthGuard } from 'src/auth/guard/guard';
 export class IrrigationController {
   constructor(private readonly irrigationService: IrrigationService) {}
 
-  /**
-   * Bắt đầu tưới nước thủ công (chế độ MANUAL)
-   */
+//start manual irrigation
   @ApiOperation({ summary: 'Start manual irrigation for a garden' })
   @ApiOkResponse({ description: 'Irrigation started successfully' })
   @ApiNotFoundResponse({ description: 'Garden not found' })
@@ -45,22 +43,9 @@ export class IrrigationController {
     return { message: 'Đã bắt đầu tưới nước', gardenId, duration: dto.duration };
   }
 
-  /**
-   * Dừng tưới nước thủ công (chế độ MANUAL)
-   */
-  @ApiOperation({ summary: 'Stop manual irrigation for a garden' })
-  @ApiOkResponse({ description: 'Irrigation stopped successfully' })
-  @ApiNotFoundResponse({ description: 'Garden not found' })
-  @Post(':gardenId/stop')
-  async stopIrrigation(@Param('gardenId', ParseIntPipe) gardenId: number, @Req() req) {
-    await this.irrigationService.stopIrrigation(gardenId);
-    return { message: 'Đã dừng tưới nước', gardenId };
-  }
 
-  /**
-   * Cập nhật chế độ tưới cho vườn
-   * Chỉ chọn 1 trong 3 chế độ: schedule, auto, manual, hoặc null (OFF)
-   */
+
+//Update irrigation mode
   @ApiOperation({
     summary: 'Update irrigation mode for a garden',
     description: 'Chỉ chọn 1 trong 3 chế độ: "schedule" (Tưới theo lịch), "auto" (Tưới tự động), "manual" (Tưới thủ công), hoặc null (OFF)',
@@ -86,15 +71,21 @@ export class IrrigationController {
     };
   }
 
-  /**
-   * Lấy thông tin chế độ tưới hiện tại của vườn
-   */
+//Get irrigation mode
   @ApiOperation({ summary: 'Get current irrigation mode for a garden' })
   @ApiOkResponse({ description: 'Irrigation mode retrieved successfully' })
   @ApiNotFoundResponse({ description: 'Garden not found' })
   @Get(':gardenId/mode')
   async getIrrigationMode(@Param('gardenId', ParseIntPipe) gardenId: number, @Req() req) {
     return this.irrigationService.getIrrigationMode(gardenId, req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get latest pump status for a garden' })
+  @ApiOkResponse({ description: 'Pump status retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'Garden not found' })
+  @Get(':gardenId/pump-status')
+  async getPumpStatus(@Param('gardenId', ParseIntPipe) gardenId: number, @Req() req) {
+    return this.irrigationService.getPumpStatus(gardenId, req.user.id);
   }
 }
 

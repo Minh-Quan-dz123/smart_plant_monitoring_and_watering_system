@@ -11,79 +11,128 @@ export class ScheduleService {
   constructor(private prisma: PrismaService, private mqttService: MqttService) {}
 
   private async publishGardenSchedules(gardenId: number) {
-    // Lấy thông tin vườn để có espId
-    const garden = await this.prisma.garden.findUnique({
-      where: { id: gardenId },
-    }) as any;
+    try {
+      this.logger.log(` [PUBLISH SCHEDULES] Bắt đầu publishGardenSchedules cho Garden ${gardenId}`);
+      
+      // Lấy thông tin vườn để có espId
+      const garden = await this.prisma.garden.findUnique({
+        where: { id: gardenId },
+      }) as any;
 
-    if (!garden || !garden.espId || garden.espId === '-1') {
-      this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device`);
-      return;
-    }
+      if (!garden) {
+        this.logger.error(` [PUBLISH SCHEDULES] Không tìm thấy Garden ${gardenId}`);
+        return;
+      }
+
+      this.logger.log(` [PUBLISH SCHEDULES] Garden ${gardenId} - espId: ${garden.espId}`);
+
+      if (!garden.espId || garden.espId === '-1') {
+        this.logger.warn(` [PUBLISH SCHEDULES] Vườn ${gardenId} chưa được kết nối với ESP device (espId: ${garden.espId})`);
+        return;
+      }
+
+    this.logger.log(` [PUBLISH SCHEDULES] Bắt đầu publish schedules cho Garden ${gardenId} - ESP ${garden.espId}`);
 
     const schedules = await this.prisma.schedule.findMany({
       where: { gardenId, enabled: true },
       orderBy: [{ date: 'asc' }, { time: 'asc' }],
     });
 
-    // Gửi từng schedule riêng lẻ với topic : schedules/esp_id/add/{position}
-    for (let i = 0; i < schedules.length; i++) {
-      const schedule = schedules[i];
-      const position = i + 1; // Vị trí bắt đầu từ 1
+    this.logger.log(` [PUBLISH SCHEDULES] Tìm thấy ${schedules.length} schedule(s) được bật`);
 
-      // Parse time (HH:MM) thành hour, minute, second
-      const [hour, minute] = schedule.time.split(':').map(Number);
-      const second = 0;
+    // Gửi từng schedule riêng lẻ với topic : schedules/esp_id/add
+    // Nhóm schedules theo repeat type để tính index
+    const schedulesByRepeat: { [key: string]: typeof schedules } = {
+      once: [],
+      daily: [],
+      weekly: [],
+    };
 
-      // Xác định year, month, day
-      let year: number, month: number, day: number;
-      if (schedule.date) {
-        const date = new Date(schedule.date);
-        year = date.getFullYear();
-        month = date.getMonth() + 1;
-        day = date.getDate();
+    for (const schedule of schedules) {
+      // Parse repeat: có thể là "weekly:2" hoặc "weekly" hoặc null
+      let repeatType: 'once' | 'daily' | 'weekly' = 'daily';
+      if (schedule.repeat) {
+        if (schedule.repeat.startsWith('weekly')) {
+          repeatType = 'weekly';
+        } else if (schedule.repeat === 'once') {
+          repeatType = 'once';
+        } else if (schedule.repeat === 'daily') {
+          repeatType = 'daily';
+        } else {
+          repeatType = schedule.date ? 'once' : 'daily';
+        }
       } else {
-        // Nếu không có date (lịch lặp), dùng ngày hiện tại
-        const now = new Date();
-        year = now.getFullYear();
-        month = now.getMonth() + 1;
-        day = now.getDate();
+        repeatType = schedule.date ? 'once' : 'daily';
       }
-
-      await this.mqttService.sendScheduleAdd(garden.espId, {
-        position,
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        second,
-        duration: schedule.durationSeconds,
-      });
+      
+      if (schedulesByRepeat[repeatType]) {
+        schedulesByRepeat[repeatType].push(schedule);
+      }
     }
 
-    // Gửi status = 1 (Schedule) nếu irrigationMode = 'schedule' và có schedule được bật
-    if (schedules.length > 0 && garden.irrigationMode === 'schedule') {
-      await this.mqttService.sendIrrigationStatus(garden.espId, 1);
+    this.logger.log(` [PUBLISH SCHEDULES] Phân loại: once=${schedulesByRepeat.once.length}, daily=${schedulesByRepeat.daily.length}, weekly=${schedulesByRepeat.weekly.length}`);
+
+    // Gửi từng schedule với index tương ứng trong nhóm repeat
+    let totalSent = 0;
+    for (const repeatType of ['once', 'daily', 'weekly'] as const) {
+      const groupSchedules = schedulesByRepeat[repeatType];
+      for (let i = 0; i < groupSchedules.length; i++) {
+        const schedule = groupSchedules[i];
+        const index = i; // Index trong nhóm repeat (bắt đầu từ 0)
+
+        // Parse time (HH:MM) thành hour, minute, second
+        const [hour, minute] = schedule.time.split(':').map(Number);
+        const second = 0;
+
+        // Xác định dayOfWeek nếu là weekly
+        // Parse từ format "weekly:2" hoặc từ date
+        let dayOfWeek: number | undefined;
+        if (repeatType === 'weekly') {
+          if (schedule.repeat && schedule.repeat.startsWith('weekly:')) {
+            // Parse từ format "weekly:2"
+            const dayOfWeekStr = schedule.repeat.split(':')[1];
+            dayOfWeek = parseInt(dayOfWeekStr, 10);
+            if (isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
+              // Fallback: dùng date nếu có
+              if (schedule.date) {
+                const date = new Date(schedule.date);
+                dayOfWeek = date.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ...
+              }
+            }
+          } else if (schedule.date) {
+            // Parse từ date
+            const date = new Date(schedule.date);
+            dayOfWeek = date.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ...
+          }
+        }
+
+        this.logger.log(` [PUBLISH SCHEDULES] Gửi schedule ${i + 1}/${groupSchedules.length} (${repeatType}): time=${schedule.time}, duration=${schedule.durationSeconds}s${dayOfWeek !== undefined ? `, dayOfWeek=${dayOfWeek}` : ''}`);
+
+        await this.mqttService.sendScheduleAdd(garden.espId, {
+          repeat: repeatType,
+          ...(repeatType === 'weekly' && dayOfWeek !== undefined && { dayOfWeek }),
+          hour,
+          minute,
+          second,
+          time: schedule.durationSeconds,
+        });
+        totalSent++;
+      }
     }
 
-    // Giữ lại topic cũ để tương thích ngược
-    const legacyPayload = JSON.stringify({
-      schedules: schedules.map((s) => ({
-        id: s.id,
-        date: s.date ? s.date.toISOString().slice(0, 10) : null,
-        time: s.time,
-        duration: s.durationSeconds,
-        repeat: s.repeat ?? null,
-      })),
-    });
-    const legacyTopic = `iot/schedule/${gardenId}`;
-    this.mqttService.publish(legacyTopic, legacyPayload);
+    this.logger.log(` [PUBLISH SCHEDULES] Đã gửi tổng cộng ${totalSent} schedule(s) đến ESP ${garden.espId}`);
+    } catch (error) {
+      this.logger.error(` [PUBLISH SCHEDULES] Lỗi trong publishGardenSchedules: ${error.message}`);
+      this.logger.error(` [PUBLISH SCHEDULES] Stack trace: ${error.stack}`);
+      throw error; // Re-throw để caller biết có lỗi
+    }
   }
 
   // Tạo schedule mới cho vườn
   async createSchedule(createScheduleDto: CreateScheduleDto, userId: number) {
     const { date, time, durationSeconds, repeat, gardenId } = createScheduleDto;
+
+    this.logger.log(` [CREATE SCHEDULE] Bắt đầu tạo schedule cho Garden ${gardenId}`);
 
     // Kiểm tra vườn có tồn tại không
     const garden = await this.prisma.garden.findUnique({
@@ -92,6 +141,8 @@ export class ScheduleService {
     if (!garden) {
       throw new NotFoundException('Vườn không tồn tại');
     }
+
+    this.logger.log(` [CREATE SCHEDULE] Garden ${gardenId} - espId: ${(garden as any).espId}`);
 
     // Kiểm tra user có quyền với vườn này không
     if (garden.userId !== userId) {
@@ -121,8 +172,18 @@ export class ScheduleService {
       },
     });
 
+    this.logger.log(` [CREATE SCHEDULE] Đã tạo schedule thành công - ID: ${created.id}`);
+    this.logger.log(` [CREATE SCHEDULE] Bắt đầu publish schedules đến ESP...`);
+
     // Publish toàn bộ schedules của vườn sang ESP
-    await this.publishGardenSchedules(gardenId);
+    try {
+      await this.publishGardenSchedules(gardenId);
+      this.logger.log(` [CREATE SCHEDULE] Đã hoàn thành publish schedules`);
+    } catch (error) {
+      this.logger.error(` [CREATE SCHEDULE] Lỗi khi publish schedules: ${error.message}`);
+      this.logger.error(` [CREATE SCHEDULE] Stack trace: ${error.stack}`);
+      // Không throw error để không ảnh hưởng đến việc tạo schedule
+    }
 
     return created;
   }

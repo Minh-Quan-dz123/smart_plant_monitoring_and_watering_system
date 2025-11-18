@@ -34,59 +34,41 @@ export class MqttService implements OnModuleInit {
 
   onModuleInit() {
     this.client = mqtt.connect({
-      host: '6dbb453c749b4a2a9f84d544ee9cad40.s1.eu.hivemq.cloud',
+      host: '394c577c67aa49a8812ab149ec4997dd.s1.eu.hivemq.cloud',
       port: 8883,
       protocol: 'mqtts',
       username: 'sang2004',
-      password: 'Sang01032004',
+      password: 'Sangdeptrai1',
       reconnectPeriod: 5000, 
     });
 
     this.client.on('connect', () => {
       this.logger.log(' Đã kết nối đến HiveMQ!');
       
-      // test topic
-      this.client.subscribe('#', (err) => {
-        if (err) {
-          this.logger.error(` Lỗi subscribe topic: ${err.message}`);
-        } else {
-          this.logger.log(' Đã subscribe tất cả topics (#) - để test');
-        }
-      });
-      
-      // 1. conditions/esp_id/{temp, humi, soil} - ESP → Server
-      this.client.subscribe('conditions/+/+', (err) => {
+      // 1. conditions/esp_id/{temp, humi, soil} - ESP → Server (JSON format)
+      this.client.subscribe('conditions/+', (err) => {
         if (err) {
           this.logger.error(` Lỗi subscribe topic conditions: ${err.message}`);
         } else {
-          this.logger.log(' Đã subscribe topic: conditions/+/+');
+          this.logger.log(' Đã subscribe topic: conditions/+');
         }
       });
 
-      // 2. logs/esp_id/{year, month, day, hour, minute, second, time tưới} - ESP → Server
-      this.client.subscribe('logs/+/+', (err) => {
+      // 2. logs/esp_id/{year, month, day, hour, minute, second, time} - ESP → Server (JSON format)
+      this.client.subscribe('logs/+', (err) => {
         if (err) {
           this.logger.error(` Lỗi subscribe topic logs: ${err.message}`);
         } else {
-          this.logger.log(' Đã subscribe topic: logs/+/+');
+          this.logger.log(' Đã subscribe topic: logs/+');
         }
       });
 
-      // 6. selects/esp_id/{status} - ESP → Server
-      this.client.subscribe('selects/+/+', (err) => {
+      // 4. iot/control/feedback/{gardenId} - ESP → Server
+      this.client.subscribe('iot/control/feedback/+', (err) => {
         if (err) {
-          this.logger.error(` Lỗi subscribe topic selects: ${err.message}`);
+          this.logger.error(` Lỗi subscribe topic iot/control/feedback: ${err.message}`);
         } else {
-          this.logger.log(' Đã subscribe topic: selects/+/+');
-        }
-      });
-
-      // 9. connect/esp_id/cmd/{is_connect} - ESP → Server
-      this.client.subscribe('connect/+/cmd/+', (err) => {
-        if (err) {
-          this.logger.error(` Lỗi subscribe topic connect/cmd: ${err.message}`);
-        } else {
-          this.logger.log(' Đã subscribe topic: connect/+/cmd/+');
+          this.logger.log(' Đã subscribe topic: iot/control/feedback/+');
         }
       });
 
@@ -96,15 +78,6 @@ export class MqttService implements OnModuleInit {
           this.logger.error(` Lỗi subscribe topic connect/response: ${err.message}`);
         } else {
           this.logger.log(' Đã subscribe topic: connect/+/response/+');
-        }
-      });
-
-      // Giữ lại các topic cũ để tương thích ngược (có thể bỏ sau)
-      this.client.subscribe('iot/sensor/+', (err) => {
-        if (err) {
-          this.logger.error(` Lỗi subscribe topic: ${err.message}`);
-        } else {
-          this.logger.log(' Đã subscribe topic: iot/sensor/+ (legacy)');
         }
       });
     });
@@ -132,33 +105,17 @@ export class MqttService implements OnModuleInit {
         if (topic.startsWith('conditions/')) {
           await this.handleConditionsData(topic, messageStr);
         }
-        // 2. logs/esp_id/{year, month, day, hour, minute, second, time tưới} - ESP → Server
+        // 2. logs/esp_id/{year, month, day, hour, minute, second, time} - ESP → Server
         else if (topic.startsWith('logs/')) {
           await this.handleLogsData(topic, messageStr);
         }
-        // 6. selects/esp_id/{status} - ESP → Server
-        else if (topic.startsWith('selects/')) {
-          await this.handleSelectsData(topic, messageStr);
-        }
-        // 9. connect/esp_id/cmd/{is_connect} - ESP → Server
-        else if (topic.startsWith('connect/') && topic.includes('/cmd/')) {
-          await this.handleConnectCmd(topic, messageStr);
+        // 4. iot/control/feedback/gardenId - ESP → Server
+        else if (topic.startsWith('iot/control/feedback/')) {
+          await this.handleControlFeedback(topic, messageStr);
         }
         // 10. connect/esp_id/response/{on} - ESP → Server
         else if (topic.startsWith('connect/') && topic.includes('/response/')) {
           this.handleConnectionResponse(topic, messageStr);
-        }
-        // Legacy: iot/sensor/{gardenId} - giữ để tương thích ngược
-        else if (topic.startsWith('iot/sensor/')) {
-          await this.handleSensorData(topic, messageStr);
-        }
-        // Legacy: iot/control/{gardenId} - giữ để tương thích ngược
-        else if (topic.startsWith('iot/control/')) {
-          await this.handleControlFeedback(topic, messageStr);
-        }
-        // Xử lý các messages khác (để test)
-        else {
-          this.logger.log(` Đã nhận message test từ topic [${topic}]: ${messageStr}`);
         }
       } catch (error) {
         this.logger.error(` Lỗi xử lý message từ topic [${topic}]: ${error.message}`);
@@ -166,269 +123,136 @@ export class MqttService implements OnModuleInit {
     });
   }
 
-  /**
-   * 1. Xử lý dữ liệu cảm biến từ ESP
-   * Topic format: conditions/esp_id/{temp, humi, soil}
-   * Message format: JSON { "temp": 25.5, "humi": 60.0, "soil": 45.0 }
-   */
+ //xử lý dữ liệu cảm biến từ ESP
   private async handleConditionsData(topic: string, message: string) {
     try {
-      // Parse topic: conditions/esp_id/{temp, humi, soil}
+      this.logger.log(` [CONDITIONS] Bắt đầu xử lý dữ liệu từ topic: ${topic}`);
+      
+      // conditions/esp_id
       const topicParts = topic.split('/');
       const espId = topicParts[1];
-      const dataType = topicParts[2]; // temp, humi, hoặc soil
 
-      if (!espId || !dataType) {
-        this.logger.warn(` Topic không hợp lệ: ${topic}`);
+      if (!espId) {
+        this.logger.warn(` [CONDITIONS] Topic không hợp lệ: ${topic} - Không tìm thấy espId`);
         return;
       }
 
-      // Lấy gardenId từ espId
+      this.logger.log(` [CONDITIONS] ESP ID: ${espId}, Message: ${message}`);
+
+      let data: any;
+      try {
+        data = JSON.parse(message);
+        this.logger.log(` [CONDITIONS] Đã parse JSON thành công: temp=${data.temp}, humi=${data.humi}, soil=${data.soil}`);
+      } catch (error) {
+        this.logger.error(` [CONDITIONS] Không thể parse JSON từ topic ${topic}: ${message} - Lỗi: ${error.message}`);
+        return;
+      }
+
+      // Validate dữ liệu
+      if (typeof data.temp !== 'number' || typeof data.humi !== 'number' || typeof data.soil !== 'number') {
+        this.logger.warn(` [CONDITIONS] Dữ liệu conditions không hợp lệ từ ESP ${espId}: ${message} - temp: ${typeof data.temp}, humi: ${typeof data.humi}, soil: ${typeof data.soil}`);
+        return;
+      }
+
       const garden = await this.prisma.garden.findFirst({
         where: { espId },
       });
 
       if (!garden) {
-        this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
-        return;
+        this.logger.warn(` [CONDITIONS] Không tìm thấy vườn với espId: ${espId} - Dữ liệu vẫn được lưu vào ESPDevice`);
+        // Vẫn cập nhật ESPDevice dù không có garden
+      } else {
+        this.logger.log(` [CONDITIONS] Tìm thấy vườn: Garden ID=${garden.id}, Name=${garden.name}`);
       }
 
-      const value = parseFloat(message);
-      if (isNaN(value)) {
-        this.logger.warn(` Giá trị không hợp lệ từ topic ${topic}: ${message}`);
-        return;
-      }
-
-      // Cập nhật ESPDevice
+      // Cập nhật ESPDevice (luôn cập nhật dù có garden hay không)
       await this.prisma.espDevice.upsert({
         where: { espId },
         update: {
-          ...(dataType === 'temp' && { temperature: value }),
-          ...(dataType === 'humi' && { airHumidity: value }),
-          ...(dataType === 'soil' && { soilMoisture: value }),
+          temperature: data.temp,
+          airHumidity: data.humi,
+          soilMoisture: data.soil,
           lastUpdated: new Date(),
+          isConnected: true, 
         },
         create: {
           espId,
-          ...(dataType === 'temp' && { temperature: value }),
-          ...(dataType === 'humi' && { airHumidity: value }),
-          ...(dataType === 'soil' && { soilMoisture: value }),
+          temperature: data.temp,
+          airHumidity: data.humi,
+          soilMoisture: data.soil,
           lastUpdated: new Date(),
+          isConnected: true,
         },
       });
+      this.logger.log(` [CONDITIONS] Đã cập nhật ESPDevice ${espId}`);
 
-      // Nếu đã có đủ 3 giá trị (temp, humi, soil), lưu vào Sensor table và kiểm tra ngưỡng
-      const espDevice = await this.prisma.espDevice.findUnique({
-        where: { espId },
-      });
-
-      if (espDevice && espDevice.temperature !== null && espDevice.airHumidity !== null && espDevice.soilMoisture !== null) {
-        // Lưu vào Sensor table
+      // Chỉ xử lý nếu có garden
+      if (garden) {
         await this.sensorService.createSensorReading({
-          temperature: espDevice.temperature,
-          airHumidity: espDevice.airHumidity,
-          soilMoisture: espDevice.soilMoisture,
+          temperature: data.temp,
+          airHumidity: data.humi,
+          soilMoisture: data.soil,
           gardenId: garden.id,
         });
+        this.logger.log(` [CONDITIONS] Đã lưu vào Sensor table cho Garden ${garden.id}`);
 
-        // Kiểm tra ngưỡng và tự động tưới nếu cần
+        // Kiểm tra ngưỡng và tự động tưới 
         const alerts = await this.irrigationService.checkThresholdAndIrrigate(garden.id, {
-          temperature: espDevice.temperature,
-          airHumidity: espDevice.airHumidity,
-          soilMoisture: espDevice.soilMoisture,
+          temperature: data.temp,
+          airHumidity: data.humi,
+          soilMoisture: data.soil,
         });
 
         this.displaySensorData(garden.id, {
-          temperature: espDevice.temperature,
-          airHumidity: espDevice.airHumidity,
-          soilMoisture: espDevice.soilMoisture,
+          temperature: data.temp,
+          airHumidity: data.humi,
+          soilMoisture: data.soil,
         }, alerts);
+      } else {
+        // Log dữ liệu nhận được 
+        this.logger.log(
+          ` [CONDITIONS] Đã nhận dữ liệu từ ESP ${espId} nhưng chưa có vườn nào được gán: ` +
+          `Temp=${data.temp}°C, Humi=${data.humi}%, Soil=${data.soil}%`
+        );
       }
     } catch (error) {
-      this.logger.error(` Lỗi xử lý dữ liệu conditions: ${error.message}`);
+      this.logger.error(` [CONDITIONS] Lỗi xử lý dữ liệu conditions: ${error.message}`);
+      this.logger.error(` [CONDITIONS] Stack trace: ${error.stack}`);
     }
   }
 
-  /**
-   * 2. Xử lý log lịch sử tưới từ ESP
-   * Topic format: logs/esp_id/{year, month, day, hour, minute, second, time}
-   * Message format: số hoặc string
-   */
+  //2. xử lý dữ liệu log từ ESP
   private async handleLogsData(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
       const espId = topicParts[1];
-      const logType = topicParts[2]; // year, month, day, hour, minute, second, hoặc time
 
-      if (!espId || !logType) {
+      if (!espId) {
         this.logger.warn(` Topic log không hợp lệ: ${topic}`);
         return;
       }
 
-      // Lấy gardenId từ espId
-      const garden = await this.prisma.garden.findFirst({
-        where: { espId },
-      }) as any;
-
-      if (!garden) {
-        this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
+      let data: any;
+      try {
+        data = JSON.parse(message);
+      } catch (error) {
+        this.logger.warn(` Không thể parse JSON từ topic ${topic}: ${message}`);
         return;
       }
 
-      // Parse giá trị từ message
-      const value = parseInt(message.trim());
-      if (isNaN(value)) {
-        this.logger.warn(` Giá trị log không hợp lệ từ topic ${topic}: ${message}`);
-        return;
-      }
-
-      // Lấy hoặc tạo pending log data cho espId này
-      let pendingLog = this.pendingLogs.get(espId);
-      if (!pendingLog) {
-        pendingLog = {};
-        this.pendingLogs.set(espId, pendingLog);
-      }
-
-      // Cập nhật giá trị tương ứng
-      switch (logType) {
-        case 'year':
-          pendingLog.year = value;
-          break;
-        case 'month':
-          pendingLog.month = value;
-          break;
-        case 'day':
-          pendingLog.day = value;
-          break;
-        case 'hour':
-          pendingLog.hour = value;
-          break;
-        case 'minute':
-          pendingLog.minute = value;
-          break;
-        case 'second':
-          pendingLog.second = value;
-          break;
-        case 'time':
-          pendingLog.duration = value; // Thời lượng tưới (giây)
-          break;
-        default:
-          this.logger.warn(` Loại log không hợp lệ: ${logType}`);
-          return;
-      }
-
-      // Reset timeout (nếu có)
-      if (pendingLog.timeout) {
-        clearTimeout(pendingLog.timeout);
-      }
-
-      // Kiểm tra xem đã có đủ thông tin chưa
       if (
-        pendingLog.year &&
-        pendingLog.month &&
-        pendingLog.day !== undefined &&
-        pendingLog.hour !== undefined &&
-        pendingLog.minute !== undefined &&
-        pendingLog.second !== undefined &&
-        pendingLog.duration !== undefined
+        typeof data.year !== 'number' ||
+        typeof data.month !== 'number' ||
+        typeof data.day !== 'number' ||
+        typeof data.hour !== 'number' ||
+        typeof data.minute !== 'number' ||
+        typeof data.second !== 'number' ||
+        typeof data.time !== 'number'
       ) {
-        // Tạo Date từ các giá trị
-        const irrigationTime = new Date(
-          pendingLog.year,
-          pendingLog.month - 1, // month là 0-indexed
-          pendingLog.day,
-          pendingLog.hour,
-          pendingLog.minute,
-          pendingLog.second,
-        );
-
-        // Xác định loại tưới từ irrigationMode của garden
-        const type = garden.irrigationMode || 'manual';
-
-        // Lưu vào database
-        await this.logService.createIrrigationLog({
-          gardenId: garden.id,
-          irrigationTime,
-          duration: pendingLog.duration,
-          status: 'completed',
-          type,
-          notes: `Tưới từ ESP ${espId}`,
-        });
-
-        this.logger.log(
-          ` [LOG] Đã lưu log tưới cho vườn ${garden.id} - ESP ${espId}: ` +
-          `${irrigationTime.toLocaleString('vi-VN')} - ${pendingLog.duration} giây`,
-        );
-
-        // Nếu đang ở chế độ Manual và đã tưới xong, chuyển về OFF
-        if (garden.irrigationMode === 'manual') {
-          // Cập nhật trạng thái tưới về false
-          const currentIrrigation = await this.prisma.irrigation.findFirst({
-            where: {
-              gardenId: garden.id,
-              status: true,
-            },
-            orderBy: { timestamp: 'desc' },
-          });
-
-          if (currentIrrigation) {
-            await this.prisma.irrigation.update({
-              where: { id: currentIrrigation.id },
-              data: { status: false },
-            });
-          }
-
-          // Chuyển về OFF (không có chế độ nào)
-          await this.prisma.garden.update({
-            where: { id: garden.id },
-            data: { irrigationMode: null } as any,
-          });
-
-          this.logger.log(` [LOG] Đã hoàn thành tưới thủ công - Chuyển về OFF (irrigationMode = null)`);
-        }
-
-        // Xóa pending log
-        this.pendingLogs.delete(espId);
-      } else {
-        // Đặt timeout 5 giây - nếu không nhận đủ thông tin trong 5s thì xóa pending log
-        pendingLog.timeout = setTimeout(() => {
-          this.logger.warn(` Timeout: Không nhận đủ thông tin log từ ESP ${espId}`);
-          this.pendingLogs.delete(espId);
-        }, 5000);
-      }
-    } catch (error) {
-      this.logger.error(` Lỗi xử lý log: ${error.message}`);
-    }
-  }
-
-  /**
-   * 6. Xử lý trạng thái chế độ tưới từ ESP
-   * Topic format: selects/esp_id/{status}
-   * Message format: số (0, 1, 2, 3)
-   * 0: Không chế độ nào (OFF)
-   * 1: Schedule (Tưới theo lịch)
-   * 2: Auto (Tưới theo ngưỡng cảm biến)
-   * 3: Manual (Tưới thủ công)
-   */
-  private async handleSelectsData(topic: string, message: string) {
-    try {
-      const topicParts = topic.split('/');
-      const espId = topicParts[1];
-      const statusValue = topicParts[2] || message.trim();
-
-      if (!espId) {
-        this.logger.warn(` Topic selects không hợp lệ: ${topic}`);
+        this.logger.warn(` Dữ liệu log không hợp lệ từ ESP ${espId}: ${message}`);
         return;
       }
 
-      // Parse status (0, 1, 2, 3)
-      const status = parseInt(statusValue);
-      if (isNaN(status) || status < 0 || status > 3) {
-        this.logger.warn(` Status không hợp lệ từ ESP ${espId}: ${statusValue}`);
-        return;
-      }
-
-      // Lấy gardenId từ espId
       const garden = await this.prisma.garden.findFirst({
         where: { espId },
       }) as any;
@@ -438,28 +262,35 @@ export class MqttService implements OnModuleInit {
         return;
       }
 
-      // Cập nhật trạng thái ESPDevice
-      await this.prisma.espDevice.upsert({
-        where: { espId },
-        update: {
-          isConnected: true, // ESP đang gửi status nên đang kết nối
-          lastUpdated: new Date(),
-        },
-        create: {
-          espId,
-          isConnected: true,
-          lastUpdated: new Date(),
-        },
+      // Tạo Date từ các giá trị
+      const irrigationTime = new Date(
+        data.year,
+        data.month - 1, // month là 0-indexed
+        data.day,
+        data.hour,
+        data.minute,
+        data.second,
+      );
+
+      const type = garden.irrigationMode || 'manual';
+
+      // Lưu vào database
+      await this.logService.createIrrigationLog({
+        gardenId: garden.id,
+        irrigationTime,
+        duration: data.time,
+        status: 'completed',
+        type,
+        notes: `Tưới từ ESP ${espId}`,
       });
 
-      // Xử lý theo status
-      const statusNames = ['OFF', 'Schedule', 'Auto', 'Manual'];
-      this.logger.log(` [SELECTS] ESP ${espId} - Garden ${garden.id} - Status: ${status} (${statusNames[status]})`);
+      this.logger.log(
+        ` [LOG] Đã lưu log tưới cho vườn ${garden.id} - ESP ${espId}: ` +
+        `${irrigationTime.toLocaleString('vi-VN')} - ${data.time} giây`,
+      );
 
-      // Nếu ESP báo status khác 3 (Manual) và đang ở chế độ Manual
-      // Có nghĩa là ESP đã tưới xong, cần chuyển về OFF
-      if (garden.irrigationMode === 'manual' && status !== 3) {
-        // Kiểm tra xem có đang tưới thủ công không
+      // Nếu đang ở chế độ Manual và đã tưới xong, chuyển về OFF
+      if (garden.irrigationMode === 'manual') {
         const currentIrrigation = await this.prisma.irrigation.findFirst({
           where: {
             gardenId: garden.id,
@@ -469,80 +300,27 @@ export class MqttService implements OnModuleInit {
         });
 
         if (currentIrrigation) {
-          // Cập nhật trạng thái tưới về false
           await this.prisma.irrigation.update({
             where: { id: currentIrrigation.id },
             data: { status: false },
           });
-
-          // Chuyển về OFF (không có chế độ nào)
-          await this.prisma.garden.update({
-            where: { id: garden.id },
-            data: { irrigationMode: null } as any,
-          });
-
-          this.logger.log(` [SELECTS] ESP ${espId} đã hoàn thành tưới thủ công - Chuyển về OFF (irrigationMode = null)`);
         }
+        // chuyển về OFF
+        await this.prisma.garden.update({
+          where: { id: garden.id },
+          data: { irrigationMode: null } as any,
+        });
+
+        this.logger.log(` [LOG] Đã hoàn thành tưới thủ công - Chuyển về OFF (irrigationMode = null)`);
       }
     } catch (error) {
-      this.logger.error(` Lỗi xử lý selects: ${error.message}`);
+      this.logger.error(` Lỗi xử lý log: ${error.message}`);
     }
   }
 
-  /**
-   * 9. Xử lý yêu cầu kết nối từ ESP
-   * Topic format: connect/esp_id/cmd/{is_connect}
-   * Message format: JSON { "is_connect": 1 } hoặc số
-   */
-  private async handleConnectCmd(topic: string, message: string) {
-    try {
-      const topicParts = topic.split('/');
-      const espId = topicParts[1];
-      const isConnect = topicParts[3]; // is_connect value
 
-      if (!espId) {
-        this.logger.warn(` Topic connect/cmd không hợp lệ: ${topic}`);
-        return;
-      }
+  //xử lý dữ liệu sensor từ ESP
 
-      // Parse message
-      let connectData: any;
-      try {
-        connectData = JSON.parse(message);
-      } catch {
-        connectData = { is_connect: parseInt(message) || parseInt(isConnect) || 1 };
-      }
-
-      const isConnected = connectData.is_connect === 1 || connectData.is_connect === true;
-
-      // Cập nhật trạng thái ESPDevice
-      await this.prisma.espDevice.upsert({
-        where: { espId },
-        update: {
-          isConnected,
-          lastUpdated: new Date(),
-        },
-        create: {
-          espId,
-          isConnected,
-          lastUpdated: new Date(),
-        },
-      });
-
-      // Gửi phản hồi xác nhận kết nối
-      await this.sendConnectResponse(espId, true);
-
-      this.logger.log(` [CONNECT/CMD] ESP ${espId} - is_connect: ${isConnected}`);
-    } catch (error) {
-      this.logger.error(` Lỗi xử lý connect/cmd: ${error.message}`);
-    }
-  }
-
-  /**
-   * Xử lý dữ liệu sensor từ ESP8266 (Legacy - giữ để tương thích ngược)
-   * Topic format: iot/sensor/{gardenId}
-   * Message format: JSON { "temperature": 25.5, "airHumidity": 60.0, "soilMoisture": 45.0 }
-   */
   private async handleSensorData(topic: string, message: string) {
     try {
       // Lấy gardenId từ topic (ví dụ: iot/sensor/1 -> gardenId = 1)
@@ -554,10 +332,8 @@ export class MqttService implements OnModuleInit {
         return;
       }
 
-      // Parse JSON message
       const sensorData = JSON.parse(message);
 
-      // Validate dữ liệu
       if (
         typeof sensorData.temperature !== 'number' ||
         typeof sensorData.airHumidity !== 'number' ||
@@ -575,23 +351,21 @@ export class MqttService implements OnModuleInit {
         gardenId: gardenId,
       });
 
-      // Kiểm tra ngưỡng và tự động tưới nếu cần (chế độ AUTO)
+      // Kiểm tra ngưỡng và tự động tưới 
       const alerts = await this.irrigationService.checkThresholdAndIrrigate(gardenId, {
         temperature: sensorData.temperature,
         airHumidity: sensorData.airHumidity,
         soilMoisture: sensorData.soilMoisture,
       });
 
-      // Hiển thị dữ liệu sensor trên console với format đẹp
+      // Hiển thị dữ liệu sensor trên console
       this.displaySensorData(gardenId, sensorData, alerts);
     } catch (error) {
       this.logger.error(` Lỗi xử lý dữ liệu sensor: ${error.message}`);
     }
   }
 
-  /**
-   * Hiển thị dữ liệu sensor trên console với format đẹp
-   */
+//hiển thị dữ liệu sensor trên console
   private displaySensorData(
     gardenId: number,
     sensorData: { temperature: number; airHumidity: number; soilMoisture: number },
@@ -606,7 +380,6 @@ export class MqttService implements OnModuleInit {
       second: '2-digit',
     });
 
-    // Tạo format bảng đẹp
     const separator = '═'.repeat(60);
     const line = '─'.repeat(60);
 
@@ -618,7 +391,7 @@ export class MqttService implements OnModuleInit {
     console.log(` Độ ẩm không khí:  ${sensorData.airHumidity.toFixed(1)}%`);
     console.log(` Độ ẩm đất:        ${sensorData.soilMoisture.toFixed(1)}%`);
     
-    // Hiển thị cảnh báo nếu có
+    // Hiển thị cảnh báo nếu có 
     if (alerts.length > 0) {
       console.log(line);
       console.log(' CẢNH BÁO:');
@@ -631,61 +404,171 @@ export class MqttService implements OnModuleInit {
     console.log(' Đã lưu vào database\n');
   }
 
-  /**
-   * Xử lý feedback từ ESP8266 về trạng thái điều khiển
-   */
+ //xu ly feedback tu ESP
   private async handleControlFeedback(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
       const gardenId = parseInt(topicParts[topicParts.length - 1]);
-      const feedback = JSON.parse(message);
+
+      if (isNaN(gardenId)) {
+        this.logger.warn(` Feedback topic không hợp lệ: ${topic}`);
+        return;
+      }
+
+      let feedback: any = {};
+      try {
+        feedback = JSON.parse(message);
+      } catch (parseError) {
+        this.logger.warn(` Feedback không phải JSON từ garden ${gardenId}: ${message}`);
+        feedback = { raw: message };
+      }
+
+      const { pumpState, statusMessage, successFlag } = this.normalizePumpFeedback(feedback);
 
       this.logger.log(` Feedback từ garden ${gardenId}: ${JSON.stringify(feedback)}`);
-      // Có thể thêm logic xử lý feedback ở đây nếu cần
+
+      const garden = await this.prisma.garden.update({
+        where: { id: gardenId },
+        data: {
+          pumpStatus: pumpState,
+          pumpStatusMessage: statusMessage,
+          lastPumpFeedbackAt: new Date(),
+          lastPumpSuccess: successFlag,
+        },
+        select: {
+          irrigationMode: true,
+        },
+      });
+
+      // Đồng bộ bảng Irrigation (đang tưới hay không)
+      const latestIrrigation = await this.prisma.irrigation.findFirst({
+        where: { gardenId },
+        orderBy: { timestamp: 'desc' },
+      });
+
+      if (latestIrrigation) {
+        await this.prisma.irrigation.update({
+          where: { id: latestIrrigation.id },
+          data: { status: pumpState === 'on' || pumpState === 'pending' },
+        });
+      }
+
+      // Ghi log khi nhận phản hồi hoàn thành hoặc lỗi
+      if (pumpState === 'off' || pumpState === 'error') {
+        const duration =
+          typeof feedback?.duration === 'number'
+            ? feedback.duration
+            : typeof feedback?.time === 'number'
+            ? feedback.time
+            : 0;
+
+        await this.logService.createIrrigationLog({
+          gardenId,
+          duration,
+          status: pumpState === 'error' || successFlag === false ? 'failed' : 'completed',
+          type: garden?.irrigationMode || 'manual',
+          notes: statusMessage,
+        });
+      }
     } catch (error) {
       this.logger.error(` Lỗi xử lý feedback: ${error.message}`);
     }
   }
 
-  /**
-   * 3. Gửi lệnh bật/tắt tưới thủ công (Server → ESP)
-   * Topic format: gardens/esp_id/{on/off}
-   * @param espId ID của ESP device
-   * @param action "on" hoặc "off"
-   */
+  private normalizePumpFeedback(feedback: any): {
+    pumpState: 'idle' | 'pending' | 'on' | 'off' | 'error';
+    statusMessage: string;
+    successFlag: boolean | null;
+  } {
+    const rawState =
+      feedback?.pump ??
+      feedback?.state ??
+      feedback?.status ??
+      feedback?.power ??
+      (typeof feedback?.raw === 'string' ? feedback.raw : null);
+
+    let pumpState: 'idle' | 'pending' | 'on' | 'off' | 'error' = 'idle';
+
+    if (typeof rawState === 'string') {
+      const normalized = rawState.trim().toLowerCase();
+      if (['on', 'started', 'start', 'running', '1', 'true', 'success-on'].includes(normalized)) {
+        pumpState = 'on';
+      } else if (['pending', 'waiting', 'processing'].includes(normalized)) {
+        pumpState = 'pending';
+      } else if (['error', 'failed', 'fail'].includes(normalized)) {
+        pumpState = 'error';
+      } else if (['off', 'stopped', 'stop', '0', 'false'].includes(normalized)) {
+        pumpState = 'off';
+      }
+    } else if (typeof rawState === 'boolean') {
+      pumpState = rawState ? 'on' : 'off';
+    }
+
+    // Nếu feedback có field explicit
+    if (typeof feedback?.success === 'boolean' && feedback.success === false) {
+      pumpState = pumpState === 'on' ? 'error' : pumpState;
+    }
+
+    const successFlag =
+      typeof feedback?.success === 'boolean'
+        ? feedback.success
+        : pumpState === 'error'
+        ? false
+        : pumpState === 'on'
+        ? true
+        : null;
+
+    const statusMessage =
+      feedback?.message ||
+      feedback?.error ||
+      (typeof feedback?.raw === 'string'
+        ? feedback.raw
+        : pumpState === 'on'
+        ? 'Máy bơm đã bật thành công'
+        : pumpState === 'off'
+        ? 'Máy bơm đã tắt'
+        : pumpState === 'pending'
+        ? 'Đang chờ ESP phản hồi'
+        : pumpState === 'error'
+        ? 'Máy bơm gặp lỗi'
+        : 'Không có phản hồi cụ thể từ ESP');
+
+    return { pumpState, statusMessage, successFlag };
+  }
+
+//3. gửi thông báo gardens đến ESP con ton tai hay khong
   async sendGardenCommand(espId: string, action: 'on' | 'off'): Promise<void> {
     try {
       const topic = `gardens/${espId}/${action}`;
-      const payload = action;
+      const payload = action; // Gửi trực tiếp string "on" hoặc "off"
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
-          this.logger.error(` Lỗi gửi lệnh gardens đến ESP ${espId}: ${error.message}`);
+          this.logger.error(` Lỗi gửi thông báo gardens đến ESP ${espId}: ${error.message}`);
         } else {
-          this.logger.log(` Đã gửi lệnh gardens đến ESP ${espId}: ${action}`);
+          this.logger.log(` Đã báo cho ESP ${espId}: vườn ${action === 'on' ? 'đã được thêm' : 'đã được xóa'}`);
         }
       });
     } catch (error) {
-      this.logger.error(` Lỗi gửi lệnh gardens: ${error.message}`);
+      this.logger.error(` Lỗi gửi thông báo gardens: ${error.message}`);
     }
   }
 
-  /**
-   * Gửi status chế độ tưới đến ESP
-   * Topic format: selects/esp_id/{status}
-   * @param espId ID của ESP device
-   * @param status 0: OFF, 1: Schedule, 2: Auto, 3: Manual
-   */
-  async sendIrrigationStatus(espId: string, status: 0 | 1 | 2 | 3): Promise<void> {
+//6. gửi status chế độ tưới đến ESP
+  async sendIrrigationStatus(espId: string, status: 1 | 2 | 3): Promise<void> {
     try {
-      const topic = `selects/${espId}/${status}`;
-      const payload = status.toString();
+      const topic = `selects/${espId}`;
+      const payload = status.toString(); 
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
           this.logger.error(` Lỗi gửi status đến ESP ${espId}: ${error.message}`);
         } else {
-          const statusNames = ['OFF', 'Schedule', 'Auto', 'Manual'];
+          const statusNames: { [key: number]: string } = {
+            1: 'Schedule',
+            2: 'Auto',
+            3: 'Manual',
+          };
           this.logger.log(` Đã gửi status đến ESP ${espId}: ${status} (${statusNames[status]})`);
         }
       });
@@ -694,15 +577,10 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * 4. Gửi lệnh bật bơm trong thời gian xác định (Server → ESP)
-   * Topic format: pump/esp_id/{time tưới}
-   * @param espId ID của ESP device
-   * @param duration Thời lượng tưới (giây)
-   */
+//4. gửi lệnh bật bơm trong thời gian xác định
   async sendPumpCommand(espId: string, duration: number): Promise<void> {
     try {
-      const topic = `pump/${espId}/${duration}`;
+      const topic = `pump/${espId}`;
       const payload = duration.toString();
 
       this.client.publish(topic, payload, (error) => {
@@ -717,26 +595,25 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * 5. Gửi chu kỳ sinh trưởng (Server → ESP)
-   * Topic format: bioCycle/esp_id/{bioCycle, time}
-   * @param espId ID của ESP device
-   * @param bioCycle Chu kỳ sinh trưởng (ví dụ: "seedling", "vegetative", "flowering", "fruiting")
-   * @param time Thời gian (có thể là timestamp hoặc duration)
-   */
-  async sendBioCycle(espId: string, bioCycle: string, time?: number): Promise<void> {
+//5. gửi dữ liệu chu kỳ sinh học đến ESP
+  async sendBioCycle(espId: string, temp: number, humi: number, soil: number, time: number): Promise<void> {
     try {
-      const topic = `bioCycle/${espId}/${bioCycle}`;
+      const topic = `bioCycle/${espId}`;
       const payload = JSON.stringify({
-        bioCycle,
-        time: time || Date.now(),
+        temp,
+        humi,
+        soil,
+        time,
       });
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
           this.logger.error(` Lỗi gửi bioCycle đến ESP ${espId}: ${error.message}`);
         } else {
-          this.logger.log(` Đã gửi bioCycle đến ESP ${espId}: ${bioCycle}`);
+          this.logger.log(
+            ` Đã gửi bioCycle đến ESP ${espId}: ` +
+            `Temp=${temp}°C, Humi=${humi}%, Soil=${soil}%, Time=${time}s`,
+          );
         }
       });
     } catch (error) {
@@ -744,63 +621,60 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * 7. Thêm lịch tưới vào ESP (Server → ESP)
-   * Topic format: schedules/esp_id/add/{vị trí, year, month, day, hour, minute, second, time}
-   * @param espId ID của ESP device
-   * @param scheduleData Dữ liệu lịch tưới
-   */
+//gửi lịch tưới đến ESP
   async sendScheduleAdd(espId: string, scheduleData: {
-    position: number;
-    year: number;
-    month: number;
-    day: number;
+    repeat: 'once' | 'daily' | 'weekly';
+    dayOfWeek?: number; // 0-6 (chỉ dùng nếu weekly), 0 = Chủ nhật
     hour: number;
     minute: number;
     second: number;
-    duration: number; // time tưới (giây)
+    time: number; // thời lượng tưới (giây)
   }): Promise<void> {
     try {
-      const { position, year, month, day, hour, minute, second, duration } = scheduleData;
-      const topic = `schedules/${espId}/add/${position}`;
+      if (!this.client || !this.client.connected) {
+        this.logger.error(` [SCHEDULE/ADD] MQTT client chưa kết nối - Không thể gửi schedule đến ESP ${espId}`);
+        return;
+      }
+
+      const topic = `schedules/${espId}/add`;
       const payload = JSON.stringify({
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        second,
-        time: duration,
+        repeat: scheduleData.repeat,
+        ...(scheduleData.repeat === 'weekly' && scheduleData.dayOfWeek !== undefined && { dayOfWeek: scheduleData.dayOfWeek }),
+        hour: scheduleData.hour,
+        minute: scheduleData.minute,
+        second: scheduleData.second,
+        time: scheduleData.time,
       });
+
+      this.logger.log(` [SCHEDULE/ADD] Đang gửi schedule đến ESP ${espId}`);
+      this.logger.log(` [SCHEDULE/ADD] Topic: ${topic}`);
+      this.logger.log(` [SCHEDULE/ADD] Payload: ${payload}`);
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
-          this.logger.error(` Lỗi gửi schedule/add đến ESP ${espId}: ${error.message}`);
+          this.logger.error(` [SCHEDULE/ADD] Lỗi gửi schedule/add đến ESP ${espId}: ${error.message}`);
         } else {
-          this.logger.log(` Đã gửi schedule/add đến ESP ${espId}: position ${position}`);
+          this.logger.log(` [SCHEDULE/ADD]  Đã gửi thành công schedule/add đến ESP ${espId}`);
+          this.logger.log(` [SCHEDULE/ADD] Chi tiết: repeat=${scheduleData.repeat}, hour=${scheduleData.hour}, minute=${scheduleData.minute}, time=${scheduleData.time}s`);
         }
       });
     } catch (error) {
-      this.logger.error(` Lỗi gửi schedule/add: ${error.message}`);
+      this.logger.error(` [SCHEDULE/ADD] Lỗi gửi schedule/add: ${error.message}`);
+      this.logger.error(` [SCHEDULE/ADD] Stack trace: ${error.stack}`);
     }
   }
 
-  /**
-   * 8. Xóa lịch tưới trên ESP (Server → ESP)
-   * Topic format: schedules/esp_id/delete/{vị trí}
-   * @param espId ID của ESP device
-   * @param position Vị trí lịch cần xóa
-   */
-  async sendScheduleDelete(espId: string, position: number): Promise<void> {
+//xóa lịch tưới trên ESP
+  async sendScheduleDelete(espId: string, repeat: 'once' | 'daily' | 'weekly', index: number): Promise<void> {
     try {
-      const topic = `schedules/${espId}/delete/${position}`;
-      const payload = position.toString();
+      const topic = `schedules/${espId}/delete/${repeat}/${index}`;
+      const payload = index.toString(); 
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
           this.logger.error(` Lỗi gửi schedule/delete đến ESP ${espId}: ${error.message}`);
         } else {
-          this.logger.log(` Đã gửi schedule/delete đến ESP ${espId}: position ${position}`);
+          this.logger.log(` Đã gửi schedule/delete đến ESP ${espId}: repeat=${repeat}, index=${index}`);
         }
       });
     } catch (error) {
@@ -816,15 +690,15 @@ export class MqttService implements OnModuleInit {
    */
   async sendConnectResponse(espId: string, connected: boolean): Promise<void> {
     try {
-      const status = connected ? 'on' : 'off';
-      const topic = `connect/${espId}/response/${status}`;
-      const payload = status;
+      const responseValue = connected ? 'on' : 'off';
+      const topic = `connect/${espId}/response/${responseValue}`;
+      const payload = responseValue; // Gửi trực tiếp string "on" hoặc "off"
 
       this.client.publish(topic, payload, (error) => {
         if (error) {
           this.logger.error(` Lỗi gửi connect/response đến ESP ${espId}: ${error.message}`);
         } else {
-          this.logger.log(` Đã gửi connect/response đến ESP ${espId}: ${status}`);
+          this.logger.log(` Đã gửi connect/response đến ESP ${espId}: ${responseValue}`);
         }
       });
     } catch (error) {
@@ -832,11 +706,7 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * 11. Đồng bộ thời gian thực cho ESP (Server → ESP)
-   * Topic format: setRealTime/esp_id/{year, month, day, hour, minute, second}
-   * @param espId ID của ESP device
-   */
+//đồng bộ thời gian thực cho ESP
   async sendRealTime(espId: string): Promise<void> {
     try {
       const now = new Date();
@@ -862,14 +732,10 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * Gửi lệnh điều khiển tưới nước đến ESP8266 (Legacy - giữ để tương thích ngược)
-   * @param gardenId ID của vườn
-   * @param command Lệnh điều khiển: { "action": "start" | "stop", "duration"?: number }
-   */
+//gửi lệnh điều khiển tưới nước đến ESP
   async sendIrrigationCommand(gardenId: number, command: { action: 'start' | 'stop'; duration?: number }) {
     try {
-      // Lấy espId từ gardenId
+
       const garden = await this.prisma.garden.findUnique({
         where: { id: gardenId },
       });
@@ -879,36 +745,23 @@ export class MqttService implements OnModuleInit {
         return;
       }
 
-      // Sử dụng topic mới
+      // Sử dụng topic pump để tưới
       if (command.action === 'start') {
         if (command.duration) {
           await this.sendPumpCommand(garden.espId, command.duration);
         } else {
-          await this.sendGardenCommand(garden.espId, 'on');
+          await this.sendPumpCommand(garden.espId, 180);
         }
       } else {
-        await this.sendGardenCommand(garden.espId, 'off');
+
+        this.logger.log(` Yêu cầu dừng tưới cho garden ${gardenId} - ESP sẽ tự động dừng khi hết thời gian`);
       }
-
-      // Giữ lại topic cũ để tương thích ngược
-      const legacyTopic = `iot/control/${gardenId}`;
-      const payload = JSON.stringify(command);
-
-      this.client.publish(legacyTopic, payload, (error) => {
-        if (error) {
-          this.logger.error(` Lỗi gửi lệnh đến garden ${gardenId}: ${error.message}`);
-        } else {
-          this.logger.log(` Đã gửi lệnh (legacy) đến garden ${gardenId}: ${payload}`);
-        }
-      });
     } catch (error) {
       this.logger.error(` Lỗi gửi lệnh điều khiển: ${error.message}`);
     }
   }
 
-  /**
-   * Publish message đến topic bất kỳ
-   */
+//publish message đến topic bất kỳ
   publish(topic: string, payload: string): void {
     this.client.publish(topic, payload, (error) => {
       if (error) {
@@ -919,15 +772,13 @@ export class MqttService implements OnModuleInit {
     });
   }
 
-  /**
-   * 10. Xử lý phản hồi kết nối từ ESP
-   * Topic format: connect/esp_id/response/{on}
-   */
+//xử lý phản hồi kết nối từ ESP
   private handleConnectionResponse(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
       const espId = topicParts[1]; // connect/{espId}/response/{on}
-      const responseValue = topicParts[3] || message; // on hoặc giá trị từ message
+      const responseValue = topicParts[3] || message.trim();
+      const isConnected = responseValue === 'on';
 
       const pendingCheck = this.pendingConnectionChecks.get(espId);
       if (pendingCheck) {
@@ -935,25 +786,32 @@ export class MqttService implements OnModuleInit {
         clearTimeout(pendingCheck.timeout);
         // Remove from map
         this.pendingConnectionChecks.delete(espId);
-        // Resolve với status ON
-        pendingCheck.resolve('ON');
-        this.logger.log(` ESP ${espId} đã phản hồi - Status: ON`);
-      } else {
-        // Cập nhật trạng thái ESPDevice nếu không có pending check
-        const isConnected = responseValue === 'on' || responseValue === '1' || responseValue === 'true';
-        this.prisma.espDevice.upsert({
-          where: { espId },
-          update: {
-            isConnected,
-            lastUpdated: new Date(),
-          },
-          create: {
-            espId,
-            isConnected,
-            lastUpdated: new Date(),
-          },
-        }).catch(err => {
-          this.logger.error(` Lỗi cập nhật ESPDevice: ${err.message}`);
+        // Resolve với status tương ứng
+        pendingCheck.resolve(isConnected ? 'ON' : 'OFF');
+        this.logger.log(` ESP ${espId} đã phản hồi - Status: ${isConnected ? 'ON' : 'OFF'}`);
+      }
+
+      // Cập nhật trạng thái ESPDevice (dù có pending check hay không)
+      this.prisma.espDevice.upsert({
+        where: { espId },
+        update: {
+          isConnected,
+          lastUpdated: new Date(),
+        },
+        create: {
+          espId,
+          isConnected,
+          lastUpdated: new Date(),
+        },
+      }).catch(err => {
+        this.logger.error(` Lỗi cập nhật ESPDevice: ${err.message}`);
+      });
+
+      // Nếu ESP báo đã kết nối -> đồng bộ thời gian thực
+      if (isConnected) {
+        this.logger.log(` ESP ${espId} đã kết nối - Gửi setRealTime để đồng bộ thời gian`);
+        this.sendRealTime(espId).catch(err => {
+          this.logger.error(` Lỗi gửi setRealTime cho ESP ${espId}: ${err.message}`);
         });
       }
     } catch (error) {
@@ -961,11 +819,7 @@ export class MqttService implements OnModuleInit {
     }
   }
 
-  /**
-   * Kiểm tra kết nối ESP device
-   * @param espId ID của ESP device
-   * @returns Promise<'ON' | 'OFF'> - 'ON' nếu ESP phản hồi trong 3s, 'OFF' nếu không
-   */
+ //kiểm tra kết nối ESP device
   async checkEspConnection(espId: string): Promise<'ON' | 'OFF'> {
     return new Promise((resolve, reject) => {
       // Kiểm tra nếu đã có pending check cho espId này
@@ -975,12 +829,12 @@ export class MqttService implements OnModuleInit {
         existingCheck.reject(new Error('Connection check cancelled - new check initiated'));
       }
 
-      // Tạo timeout 3 giây
+      // Tạo timeout 2 giây
       const timeout = setTimeout(() => {
         this.pendingConnectionChecks.delete(espId);
-        this.logger.warn(` ESP ${espId} không phản hồi sau 3s - Status: OFF`);
+        this.logger.warn(` ESP ${espId} không phản hồi sau 2s - Status: OFF`);
         resolve('OFF');
-      }, 3000);
+      }, 2000);
 
       // Lưu pending check
       this.pendingConnectionChecks.set(espId, {
@@ -997,8 +851,8 @@ export class MqttService implements OnModuleInit {
 
       // Publish message để yêu cầu ESP kiểm tra kết nối
       // Format: connect/{espId}/cmd/{is_connect}
-      const topic = `connect/${espId}/cmd/1`;
-      const payload = JSON.stringify({ is_connect: 1 });
+      const topic = `connect/${espId}/cmd/is_connect`;
+      const payload = 'is_connect'; // Gửi trực tiếp string "is_connect"
       
       this.client.publish(topic, payload, (error) => {
         if (error) {

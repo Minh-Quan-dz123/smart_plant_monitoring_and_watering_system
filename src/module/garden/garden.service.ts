@@ -101,14 +101,25 @@ export class GardenService {
       throw new BadRequestException('Không có quyền cập nhật vườn này');
     }
 
-    // Kiểm tra ESP device có tồn tại không
-    const espDevice = await this.prisma.espDevice.findUnique({
+    // Kiểm tra ESP device có tồn tại không, nếu chưa có thì tự động tạo mới
+    let espDevice = await this.prisma.espDevice.findUnique({
       where: { espId },
       include: { gardens: true },
     });
 
     if (!espDevice) {
-      throw new BadRequestException(`ESP device với ID ${espId} không tồn tại. Vui lòng tạo ESP device trước.`);
+      // Tự động tạo ESP device mới nếu chưa tồn tại
+      espDevice = await this.prisma.espDevice.create({
+        data: {
+          espId,
+          temperature: null,
+          airHumidity: null,
+          soilMoisture: null,
+          isConnected: false,
+        },
+        include: { gardens: true },
+      });
+      this.logger.log(` Đã tự động tạo ESP device mới với ID: ${espId}`);
     }
 
     // Kiểm tra ESP device đã được gán cho vườn khác chưa (chỉ áp dụng cho ESPDevice thực tế, không phải "-1")
@@ -141,6 +152,9 @@ export class GardenService {
       data: { isConnected },
     });
 
+    // Lưu espId cũ để so sánh
+    const oldEspId = garden.espId;
+
     // Cập nhật espId cho vườn
     const updatedGarden = await this.prisma.garden.update({
       where: { id: gardenId },
@@ -150,6 +164,22 @@ export class GardenService {
         espDevice: true,
       },
     });
+
+    // Báo cho ESP biết vườn đã được thêm/xóa
+    // Nếu espId cũ != "-1" và espId mới != "-1": vườn đã được chuyển sang ESP khác
+    // Nếu espId cũ == "-1" và espId mới != "-1": vườn đã được thêm vào ESP
+    // Nếu espId cũ != "-1" và espId mới == "-1": không nên xảy ra (đã check ở trên)
+    if (oldEspId === "-1" && espId !== "-1") {
+      // Vườn mới được thêm vào ESP
+      await this.mqttService.sendGardenCommand(espId, 'on');
+      this.logger.log(` Đã báo cho ESP ${espId}: vườn ${gardenId} đã được thêm`);
+    } else if (oldEspId !== "-1" && espId !== "-1" && oldEspId !== espId) {
+      // Vườn được chuyển sang ESP khác
+      await this.mqttService.sendGardenCommand(oldEspId, 'off');
+      await this.mqttService.sendGardenCommand(espId, 'on');
+      this.logger.log(` Đã báo cho ESP ${oldEspId}: vườn ${gardenId} đã được xóa`);
+      this.logger.log(` Đã báo cho ESP ${espId}: vườn ${gardenId} đã được thêm`);
+    }
 
     // Trả về kết quả kèm connection status
     return {
@@ -171,6 +201,18 @@ export class GardenService {
     if (!garden) throw new BadRequestException('Vườn không tồn tại');
     if (garden.userId !== userId) throw new BadRequestException('Không có quyền xóa vườn này');
 
-    return this.prisma.garden.delete({ where: { id } });
+    // Lưu espId trước khi xóa để báo cho ESP
+    const espId = garden.espId;
+
+    // Xóa vườn
+    const deleted = await this.prisma.garden.delete({ where: { id } });
+
+    // Báo cho ESP biết vườn đã được xóa (nếu có espId và không phải "-1")
+    if (espId && espId !== "-1") {
+      await this.mqttService.sendGardenCommand(espId, 'off');
+      this.logger.log(` Đã báo cho ESP ${espId}: vườn ${id} đã được xóa`);
+    }
+
+    return deleted;
   }
 }
