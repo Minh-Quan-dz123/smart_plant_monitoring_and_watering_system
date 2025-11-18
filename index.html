@@ -1,22 +1,27 @@
-
-<!-- index.html-->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌱Đăng nhập</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌱 Đăng nhập</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="page">
-    <h2>🌱Đăng nhập</h2>
-    <input type="text" placeholder="Tên người dùng">
-    <input type="password" placeholder="Mật khẩu">
-    <button onclick="window.location.href='main.html'">Đăng nhập</button>
-    <button onclick="window.location.href='register.html'">Đăng ký</button>
-  </div>
-  <script src="script.js"></script>
-</body>
+  <div class="page">
+    <h2>🌱 Đăng nhập</h2>
 
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Tên người dùng" required>
+      <input type="password" id="password" placeholder="Mật khẩu" required>
+
+      <p id="error-message" style="color: red;"></p>
+
+            <button type="submit">Đăng nhập</button>
+      <button type="button" onclick="window.location.href='register.html'">Đăng ký</button>
+    </form>
+
+  </div>
+
+    <script src="auth.js" defer></script>
+</body>
 </html>
