@@ -43,9 +43,24 @@ export class IrrigationService {
     }
 
     const plant = garden.plant;
-    const alerts: ThresholdAlert[] = [];
-    let shouldIrrigate = false;
+  
+    // let shouldIrrigate = false;
 
+    if (garden.irrigationMode === 'auto') {
+      try {
+        await this.mqttService.sendIrrigationStatus(garden.espId, 2);
+        await this.mqttService.sendBioCycle(
+          garden.espId,
+          plant.maxTemperature,
+          plant.maxAirHumidity,
+          plant.minSoilMoisture
+        );
+      } catch (error) {
+        this.logger.error(`Lỗi gửi BioCycle cho garden ${gardenId}: ${error.message}`);
+      }
+    }
+
+    const alerts: ThresholdAlert[] = [];
     // kiểm tra -> cảnh báo
     if (plant.minTemperature !== null || plant.maxTemperature !== null) {
       if (plant.minTemperature !== null && sensorData.temperature < plant.minTemperature) {
@@ -85,55 +100,55 @@ export class IrrigationService {
       }
     }
 
-    // kiểm tra -> tưới
-    if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
-      alerts.push({
-        type: 'soilMoisture',
-        message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
-        currentValue: sensorData.soilMoisture,
-        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
-      });
-      shouldIrrigate = true;
-    }
+    // // kiểm tra -> tưới
+    // if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
+    //   alerts.push({
+    //     type: 'soilMoisture',
+    //     message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
+    //     currentValue: sensorData.soilMoisture,
+    //     threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
+    //   });
+    //   shouldIrrigate = true;
+    // }
 
-    if (plant.maxSoilMoisture !== null && sensorData.soilMoisture > plant.maxSoilMoisture) {
-      alerts.push({
-        type: 'soilMoisture',
-        message: `  Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
-        currentValue: sensorData.soilMoisture,
-        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
-      });
-    }
+    // if (plant.maxSoilMoisture !== null && sensorData.soilMoisture > plant.maxSoilMoisture) {
+    //   alerts.push({
+    //     type: 'soilMoisture',
+    //     message: `  Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
+    //     currentValue: sensorData.soilMoisture,
+    //     threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
+    //   });
+    // }
 
-    if (alerts.length > 0) {
-      this.logger.warn(` Cảnh báo cho vườn #${gardenId}:`);
-      alerts.forEach((alert) => {
-        this.logger.warn(`   ${alert.message}`);
-      });
-    }
+    // if (alerts.length > 0) {
+    //   this.logger.warn(` Cảnh báo cho vườn #${gardenId}:`);
+    //   alerts.forEach((alert) => {
+    //     this.logger.warn(`   ${alert.message}`);
+    //   });
+    // }
 
-    // Tự động tưới nếu độ ẩm đất thấp - Gửi lệnh qua MQTT
-    if (shouldIrrigate) {
-      if (garden.espId && garden.espId !== '-1') {
-        await this.updateGardenPumpStatus(garden.id, {
-          pumpStatus: 'pending',
-          message: 'Đang gửi lệnh tưới tự động',
-        });
-        // Gửi status = 2 (Auto)
-        await this.mqttService.sendIrrigationStatus(garden.espId as any, 2);
-        await this.mqttService.sendPumpCommand(garden.espId as any, 60);
-        this.logger.log(` Đã gửi lệnh tưới tự động (Auto) cho vườn #${gardenId} - ESP ${garden.espId}`);
-      } else {
-        this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device - Không thể tưới tự động`);
-        await this.updateGardenPumpStatus(garden.id, {
-          pumpStatus: 'error',
-          message: 'Vườn chưa được kết nối với ESP device - Không thể tưới tự động',
-          success: false,
-        });
-      }
-    }
-
+    // // Tự động tưới nếu độ ẩm đất thấp - Gửi lệnh qua MQTT
+    // if (shouldIrrigate) {
+    //   if (garden.espId && garden.espId !== '-1') {
+    //     await this.updateGardenPumpStatus(garden.id, {
+    //       pumpStatus: 'pending',
+    //       message: 'Đang gửi lệnh tưới tự động',
+    //     });
+    //     // Gửi status = 2 (Auto)
+    //     await this.mqttService.sendIrrigationStatus(garden.espId as any, 2);
+    //     await this.mqttService.sendPumpCommand(garden.espId as any, 60);
+    //     this.logger.log(` Đã gửi lệnh tưới tự động (Auto) cho vườn #${gardenId} - ESP ${garden.espId}`);
+    //   } else {
+    //     this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device - Không thể tưới tự động`);
+    //     await this.updateGardenPumpStatus(garden.id, {
+    //       pumpStatus: 'error',
+    //       message: 'Vườn chưa được kết nối với ESP device - Không thể tưới tự động',
+    //       success: false,
+    //     });
+    //   }
+    // }
     return alerts;
+
   }
 
   //manual
@@ -159,24 +174,45 @@ export class IrrigationService {
       where: { id: gardenId },
       data: { irrigationMode: 'manual' } as any,
     });
+  const durationSeconds = duration * 60;
+    //gửi lệnh đến esp
+    try{
+      await this.mqttService.sendIrrigationStatus(garden.espId,3);
+      await this.mqttService.sendPumpCommand(garden.espId, durationSeconds);
+    } catch (err){
+      await this.updateGardenPumpStatus(gardenId, {
+        pumpStatus: 'error',
+        message: `Lỗi gửi lệnh tưới thủ công: ${err.message}`,
+        success: false,
+      });
+       this.logger.error(`Lỗi gửi lệnh tưới thủ công: ${err.message}`);
+       return;
+    }
+  //  Tạo record irrigation với status tạm thời false
+  const irrigation = await this.prisma.irrigation.create({
+    data: {
+      gardenId,
+      status: false,
+    },
+  });
 
-    // Gửi status = 3 (Manual) đến ESP
-    await this.mqttService.sendIrrigationStatus(garden.espId, 3);
-
-    const durationSeconds = duration * 60; 
-    await this.mqttService.sendPumpCommand(garden.espId, durationSeconds);
-
-    await this.prisma.irrigation.create({
-      data: {
-        gardenId: gardenId,
-        status: true,
-      },
+  this.logger.log(
+    `Đã gửi lệnh tưới thủ công vườn #${gardenId} trong ${duration} phút (${durationSeconds} giây)`
+  );
+// Chờ feedback từ ESP tối đa 10 giây
+  const feedbackReceived = await this.waitForPumpFeedback(gardenId, 10_000);
+  if (!feedbackReceived) {
+    await this.updateGardenPumpStatus(gardenId, {
+      pumpStatus: 'error',
+      message: 'Không nhận phản hồi từ ESP sau 10 giây',
+      success: false,
     });
-
-    this.logger.log(` Đã bắt đầu tưới thủ công vườn #${gardenId} trong ${duration} phút (${durationSeconds} giây)`);
-    
-    // Sau khi tưới xong, ESP sẽ tự động gửi thông báo về
-    // Server sẽ xử lý trong handleSelectsData để chuyển về OFF (irrigationMode = null)
+    await this.prisma.irrigation.update({
+      where: { id: irrigation.id },
+      data: { status: false },
+    });
+    this.logger.warn(`Chưa nhận phản hồi từ ESP vườn #${gardenId} sau 10 giây`);
+  }
   }
 
 
@@ -291,6 +327,36 @@ export class IrrigationService {
         lastPumpFeedbackAt: new Date(),
         lastPumpSuccess: typeof data.success === 'boolean' ? data.success : null,
       },
+    });
+  }
+
+  private async waitForPumpFeedback(gardenId: number, timeoutMs: number): Promise<boolean> {
+    const interval = 500; // check mỗi 0.5s
+    const maxTries = timeoutMs / interval;
+    let tries = 0;
+  
+    return new Promise((resolve) => {
+      const timer = setInterval(async () => {
+        const garden = await this.prisma.garden.findUnique({ where: { id: gardenId } }) as any;
+        if (!garden) {
+          clearInterval(timer);
+          resolve(false);
+          return;
+        }
+  
+        // Nếu pumpStatus đã thay đổi từ 'pending' sang on/off/error
+        if (['on', 'off', 'error'].includes(garden.pumpStatus)) {
+          clearInterval(timer);
+          resolve(true);
+          return;
+        }
+  
+        tries++;
+        if (tries >= maxTries) {
+          clearInterval(timer);
+          resolve(false);
+        }
+      }, interval);
     });
   }
 }

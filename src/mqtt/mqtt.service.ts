@@ -109,13 +109,10 @@ export class MqttService implements OnModuleInit {
         else if (topic.startsWith('logs/')) {
           await this.handleLogsData(topic, messageStr);
         }
-        // 4. iot/control/feedback/gardenId - ESP → Server
-        else if (topic.startsWith('iot/control/feedback/')) {
-          await this.handleControlFeedback(topic, messageStr);
-        }
-        // 10. connect/esp_id/response/{on} - ESP → Server
+        // 10. connect/esp_id/response/{on, off, error, pending} - ESP → Server
         else if (topic.startsWith('connect/') && topic.includes('/response/')) {
           this.handleConnectionResponse(topic, messageStr);
+          await this.handleControlFeedback(topic, messageStr);
         }
       } catch (error) {
         this.logger.error(` Lỗi xử lý message từ topic [${topic}]: ${error.message}`);
@@ -323,12 +320,12 @@ export class MqttService implements OnModuleInit {
 
   private async handleSensorData(topic: string, message: string) {
     try {
-      // Lấy gardenId từ topic (ví dụ: iot/sensor/1 -> gardenId = 1)
-      const topicParts = topic.split('/');
-      const gardenId = parseInt(topicParts[topicParts.length - 1]);
 
-      if (isNaN(gardenId)) {
-        this.logger.warn(` Không thể parse gardenId từ topic: ${topic}`);
+      const topicParts = topic.split('/');
+      const espId = topicParts[1];
+
+      if (!espId) {
+        this.logger.warn(` Không thể parse espId từ topic: ${topic}`);
         return;
       }
 
@@ -339,27 +336,36 @@ export class MqttService implements OnModuleInit {
         typeof sensorData.airHumidity !== 'number' ||
         typeof sensorData.soilMoisture !== 'number'
       ) {
-        this.logger.warn(` Dữ liệu sensor không hợp lệ từ garden ${gardenId}`);
+        this.logger.warn(` Dữ liệu sensor không hợp lệ từ esp ${espId}`);
         return;
       }
 
+      const garden = await this.prisma.garden.findFirst({
+        where: { espId },
+      }) as any;
+
+      if (!garden) {
+        this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
+        return;
+      }
       // Lưu vào database
       await this.sensorService.createSensorReading({
         temperature: sensorData.temperature,
         airHumidity: sensorData.airHumidity,
         soilMoisture: sensorData.soilMoisture,
-        gardenId: gardenId,
+        gardenId: garden.id,
       });
 
       // Kiểm tra ngưỡng và tự động tưới 
-      const alerts = await this.irrigationService.checkThresholdAndIrrigate(gardenId, {
+      const alerts = await this.irrigationService.checkThresholdAndIrrigate(garden.id, {
         temperature: sensorData.temperature,
         airHumidity: sensorData.airHumidity,
         soilMoisture: sensorData.soilMoisture,
       });
 
+
       // Hiển thị dữ liệu sensor trên console
-      this.displaySensorData(gardenId, sensorData, alerts);
+      this.displaySensorData(garden.id, sensorData, alerts);
     } catch (error) {
       this.logger.error(` Lỗi xử lý dữ liệu sensor: ${error.message}`);
     }
@@ -408,13 +414,23 @@ export class MqttService implements OnModuleInit {
   private async handleControlFeedback(topic: string, message: string) {
     try {
       const topicParts = topic.split('/');
-      const gardenId = parseInt(topicParts[topicParts.length - 1]);
+      const espId = topicParts[1];
 
-      if (isNaN(gardenId)) {
-        this.logger.warn(` Feedback topic không hợp lệ: ${topic}`);
+      if (!espId) {
+        this.logger.warn(` Không thể parse espId từ topic: ${topic}`);
         return;
       }
 
+      const garden = await this.prisma.garden.findFirst({
+        where: { espId },
+      }) as any;
+
+      if (!garden) {
+        this.logger.warn(` Không tìm thấy vườn với espId: ${espId}`);
+        return;
+      }
+
+      const gardenId = garden.id;
       let feedback: any = {};
       try {
         feedback = JSON.parse(message);
@@ -423,11 +439,11 @@ export class MqttService implements OnModuleInit {
         feedback = { raw: message };
       }
 
-      const { pumpState, statusMessage, successFlag } = this.normalizePumpFeedback(feedback);
+      const { pumpState, statusMessage, successFlag } = this.normalizePumpFeedback(feedback); //chuẩn hóa
 
       this.logger.log(` Feedback từ garden ${gardenId}: ${JSON.stringify(feedback)}`);
-
-      const garden = await this.prisma.garden.update({
+//cập nhật trạng thái
+      const updateStatusGarden = await this.prisma.garden.update({
         where: { id: gardenId },
         data: {
           pumpStatus: pumpState,
@@ -466,7 +482,7 @@ export class MqttService implements OnModuleInit {
           gardenId,
           duration,
           status: pumpState === 'error' || successFlag === false ? 'failed' : 'completed',
-          type: garden?.irrigationMode || 'manual',
+          type: updateStatusGarden?.irrigationMode || 'manual',
           notes: statusMessage,
         });
       }
@@ -596,23 +612,41 @@ export class MqttService implements OnModuleInit {
   }
 
 //5. gửi dữ liệu chu kỳ sinh học đến ESP
-  async sendBioCycle(espId: string, temp: number, humi: number, soil: number, time: number): Promise<void> {
+  async sendBioCycle(espId: string, maxTemperature: number, maxAirHumidity: number, minAirHumidity: number): Promise<void> {
     try {
-      const topic = `bioCycle/${espId}`;
-      const payload = JSON.stringify({
-        temp,
-        humi,
-        soil,
-        time,
+      // 1. Lấy garden theo espId + lấy luôn plant
+      const garden = await this.prisma.garden.findFirst({
+        where: { espId: espId },
       });
+      if (!garden || !garden.plantId) {
+        this.logger.error(`Không tìm thấy garden hoặc cây gắn với ESP ${espId}`);
+          return;
+        }
+        // Tìm plant theo plantId
+        const plant = await this.prisma.plant.findUnique({
+          where: { id: garden.plantId },
+        });
+        if (!plant) {
+          this.logger.error(`Không tìm thấy thông tin cây với plantId ${garden.plantId} cho ESP ${espId}`);
+          return;
+        }
 
+      const { maxTemperature, maxAirHumidity, minSoilMoisture } = plant;
+
+      const payload = JSON.stringify({
+        maxTemperature, 
+        maxAirHumidity , 
+        minSoilMoisture
+      });
+      const topic = `bioCycle/${espId}`;
+      
       this.client.publish(topic, payload, (error) => {
         if (error) {
           this.logger.error(` Lỗi gửi bioCycle đến ESP ${espId}: ${error.message}`);
         } else {
           this.logger.log(
             ` Đã gửi bioCycle đến ESP ${espId}: ` +
-            `Temp=${temp}°C, Humi=${humi}%, Soil=${soil}%, Time=${time}s`,
+            `Temp=${maxTemperature}°C, Humi=${maxAirHumidity}%, Soil=${minSoilMoisture}%`,
           );
         }
       });
