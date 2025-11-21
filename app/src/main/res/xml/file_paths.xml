@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-</PreferenceScreen>
+<paths>
+    <external-files-path
+        name="files"
+        path="Pictures/" />
+</paths>
+    <!--name: đặt thôi chủ yếu thể hiện mục đích ko quan trọng là path-->

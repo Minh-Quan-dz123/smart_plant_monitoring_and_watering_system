@@ -1,9 +1,10 @@
 package com.example.project_iot_auto_watering.data.model.response
 
-data class Sensor(
-    val idSensor: Int,
-    val nameSensor: String,
-    val stateSensor: String,
-    val plantId: Int,
-    val timestamp: Long
+data class EspDevice(
+    val espId: String,
+    val temperature: Float,
+    val airHumidity: Float,
+    val soilMoisture: Float,
+    val lastUpdated: String,
+    val isConnected: Boolean
 )

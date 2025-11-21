@@ -1,4 +1,4 @@
-package com.example.project_iot_auto_watering.ui.home.adapter
+package com.example.project_iot_auto_watering.ui.crops
 
 import android.app.Dialog
 import android.os.Bundle
@@ -26,6 +26,8 @@ class FragmentDialogAddDevice(private val listener: AddDevice) : DialogFragment(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
+        isCancelable = false
 
         initListener()
 
@@ -60,5 +62,5 @@ class FragmentDialogAddDevice(private val listener: AddDevice) : DialogFragment(
     }
 }
 interface AddDevice{
-    fun getIdDevice(id:String)
+    fun getIdDevice(idDevice:String)
 }

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
     android:elevation="4dp">
 
     <com.google.android.material.card.MaterialCardView
@@ -143,16 +144,16 @@
     <TextView
         android:id="@+id/tv_name_humidity"
         android:layout_width="0dp"
-        android:gravity="center"
-        android:layout_marginHorizontal="10dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
         android:ellipsize="end"
+        android:gravity="center"
         android:maxLines="1"
         android:text="@string/humidity"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="@+id/lin_layout_humidity"
-        app:layout_constraintStart_toEndOf="@+id/tv_name_tempe"
         app:layout_constraintEnd_toStartOf="@+id/tv_name_soil"
+        app:layout_constraintStart_toEndOf="@+id/tv_name_tempe"
         app:layout_constraintTop_toBottomOf="@+id/lin_layout_humidity" />
 
     <ImageView

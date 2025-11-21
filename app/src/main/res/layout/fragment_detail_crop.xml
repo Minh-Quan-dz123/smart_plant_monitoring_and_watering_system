@@ -18,12 +18,12 @@
 
     <ImageView
         android:id="@+id/icon_back"
-        app:layout_constraintBottom_toBottomOf="@+id/img_rounded"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_marginStart="24dp"
         android:padding="2dp"
         android:src="@drawable/icon_back"
+        app:layout_constraintBottom_toBottomOf="@+id/img_rounded"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_rounded" />
 
@@ -39,7 +39,7 @@
         <TextView
             android:id="@+id/tv_result_tempe"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginEnd="1dp"
             android:text="@string/_25"
             android:textSize="20sp" />
@@ -102,11 +102,10 @@
         app:layout_constraintTop_toBottomOf="@+id/img_rounded">
 
         <ImageView
-            android:id="@+id/img_crop"
+            android:id="@+id/img_crops"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/img_tomato" />
+            android:scaleType="centerCrop" />
     </androidx.cardview.widget.CardView>
 
 
@@ -219,6 +218,19 @@
         app:layout_constraintStart_toStartOf="@+id/lin_layout_soil"
         app:layout_constraintTop_toBottomOf="@+id/lin_layout_soil" />
 
+    <TextView
+        android:id="@+id/tv_count_down"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="15dp"
+        android:elevation="6dp"
+        android:text="@string/_00_00"
+        android:textColor="#20B19E"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/cv_crop"
+        app:layout_constraintTop_toTopOf="@+id/cv_crop" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cv_bgr"
@@ -226,35 +238,49 @@
         android:layout_height="55dp"
         android:layout_marginStart="20dp"
         app:cardCornerRadius="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/img_tree"
-        app:layout_constraintDimensionRatio="w,5:2"
+        app:layout_constraintBottom_toBottomOf="@+id/cv_bgr_2"
+        app:layout_constraintDimensionRatio="w,8:3"
         app:layout_constraintStart_toStartOf="@+id/cv_crop"
-        app:layout_constraintTop_toBottomOf="@+id/tv_name_tempe"
+        app:layout_constraintTop_toTopOf="@+id/cv_bgr_2"
         app:strokeColor="@color/black"
         app:strokeWidth="2dp" />
 
+    <ImageView
+        android:id="@+id/img_drop"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:src="@drawable/icon_spinner"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_mode"
+        app:layout_constraintStart_toEndOf="@+id/tv_mode"
+        app:layout_constraintTop_toTopOf="@+id/tv_mode" />
+
     <TextView
-        android:id="@+id/tv_time"
+        android:id="@+id/tv_mode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:elevation="2dp"
-        android:text="@string/_30_ph_t"
+        android:text="@string/mode"
         android:textSize="20sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="@+id/cv_bgr"
         app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintStart_toStartOf="@+id/cv_bgr"
         app:layout_constraintTop_toTopOf="@+id/cv_bgr" />
 
     <TextView
-        android:id="@+id/tv_des_time"
+        android:id="@+id/tv_mode_specific"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="2dp"
-        android:text="@string/next_watering"
+        android:layout_marginStart="-2dp"
+        android:text="@string/manual"
+        android:textColor="#48752C"
         android:textSize="20sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/cv_bgr"
-        app:layout_constraintStart_toStartOf="@+id/tv_time"
-        app:layout_constraintTop_toBottomOf="@+id/tv_time" />
+        app:layout_constraintStart_toStartOf="@+id/tv_mode"
+        app:layout_constraintTop_toBottomOf="@+id/tv_mode" />
 
 
     <com.google.android.material.card.MaterialCardView
@@ -266,16 +292,16 @@
         app:layout_constraintBottom_toTopOf="@+id/img_tree"
         app:layout_constraintDimensionRatio="w,5:2"
         app:layout_constraintEnd_toEndOf="@+id/cv_crop"
-        app:layout_constraintTop_toBottomOf="@+id/tv_name_tempe"
+        app:layout_constraintTop_toBottomOf="@+id/tv_name_soil"
         app:strokeColor="@color/black"
         app:strokeWidth="2dp" />
 
     <TextView
-        android:id="@+id/tv_count"
+        android:id="@+id/tv_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:elevation="2dp"
-        android:text="@string/_00_00"
+        android:text="@string/_30_ph_t"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="@+id/cv_bgr_2"
         app:layout_constraintHorizontal_bias="0.2"
@@ -287,22 +313,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="2dp"
-        android:text="@string/count_down"
+        android:text="@string/next_watering"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/cv_bgr_2"
-        app:layout_constraintStart_toStartOf="@+id/tv_count"
-        app:layout_constraintTop_toBottomOf="@+id/tv_count" />
-
+        app:layout_constraintStart_toStartOf="@+id/tv_time"
+        app:layout_constraintTop_toBottomOf="@+id/tv_time" />
 
     <ImageView
         android:id="@+id/img_tree"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:layout_marginStart="32dp"
         android:layout_marginBottom="20dp"
         android:padding="2dp"
         android:src="@drawable/icon_tree"
         app:layout_constraintBottom_toTopOf="@+id/img_1"
-        app:layout_constraintStart_toStartOf="@+id/cv_bgr" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/tv_state"

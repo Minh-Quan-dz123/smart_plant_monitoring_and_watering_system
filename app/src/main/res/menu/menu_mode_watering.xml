@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/manual"
+        android:title="@string/manual" />
+    <item
+        android:id="@+id/schedule"
+        android:title="@string/schedule_water" />
+    <item
+        android:id="@+id/auto"
+        android:title="@string/auto" />
 </menu>

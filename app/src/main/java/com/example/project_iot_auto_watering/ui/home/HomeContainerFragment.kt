@@ -11,7 +11,8 @@ import androidx.core.view.get
 import com.example.project_iot_auto_watering.R
 
 
-class HomeContainerFragment : Fragment() {
+
+class HomeContainerFragment : Fragment(){
     private var _binding: FragmentHomeContainerBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapterPager: HomePagerAdapter
@@ -20,7 +21,7 @@ class HomeContainerFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomeContainerBinding.inflate(inflater, container, false)
         return binding.root
     }

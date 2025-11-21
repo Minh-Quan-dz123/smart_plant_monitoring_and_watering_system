@@ -1,4 +1,9 @@
 package com.example.project_iot_auto_watering.data.model.response
 
-class ReceiveIrrigationManual {
+data class ReceiveIrrigationManual(
+    val message: String,
+    val gardenId: Int,
+    val duration: Int=0,//Phút
+    val irrigationMode:String="manual"
+) {
 }

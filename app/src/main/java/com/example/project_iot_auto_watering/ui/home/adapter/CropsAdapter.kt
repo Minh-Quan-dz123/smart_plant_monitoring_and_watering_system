@@ -4,14 +4,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.project_iot_auto_watering.data.model.Crops
-import com.example.project_iot_auto_watering.data.model.DataSensor
+import com.example.project_iot_auto_watering.data.model.response.DataEspAll
+import com.example.project_iot_auto_watering.data.model.response.EspDevice
+import com.example.project_iot_auto_watering.data.model.response.Garden
+import com.example.project_iot_auto_watering.data.model.response.GardenInfo
 import com.example.project_iot_auto_watering.databinding.ItemCropsBlankBinding
 import com.example.project_iot_auto_watering.databinding.ItemCropsHomeBinding
 
 class CropsAdapter(
-    private val listCrops: List<Crops>,
-    private val listDataSensor: List<DataSensor>,
+    private val listGarden: List<Garden>,
+    private val listDevice: List<DataEspAll>,
     private val listener: OnCropsClickListener
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -19,12 +21,15 @@ class CropsAdapter(
     private val TYPE_BLANK = 0
     private val TYPE_CROPS = 1
 
+    private var espDeviceDefault= DataEspAll("-1",0.0f,0.0f,0.0f,"",false, GardenInfo(-1,""))
+    private var espDevice= DataEspAll("-1",0.0f,0.0f,0.0f,"",false, GardenInfo(-1,""))
+
 
     override fun getItemViewType(position: Int): Int {
-        return if (listCrops.isEmpty()) {
+        return if (listGarden.isEmpty()) {
             TYPE_BLANK
         } else {
-            if (position == listCrops.size) TYPE_BLANK else TYPE_CROPS
+            if (position == listGarden.size) TYPE_BLANK else TYPE_CROPS
         }
     }
 
@@ -63,18 +68,21 @@ class CropsAdapter(
         when (holder) {
             is CropsViewHolder -> {
                 Log.d("TYPE", "CropsViewHolder")
-                val itemCrops = listCrops[position]
+                val itemGarden = listGarden[position]
 
-                var dataSensor = DataSensor("-1", "0", "0", "0")
-
-                for (data in listDataSensor) {
-                    if (data.idSensor == itemCrops.idSensor) {
-                        dataSensor = data
+                for(esp in listDevice){
+                    if(esp.espId==itemGarden.espId){
+                        espDevice=esp
                         break
                     }
                 }
 
-                holder.bind(itemCrops, dataSensor)
+
+                holder.bind(itemGarden,espDevice)
+                espDevice=espDeviceDefault
+                holder.itemView.setOnClickListener {
+                    listener.onCropsClick(itemGarden)
+                }
             }
 
             is CropsViewHolderBlank -> {
@@ -87,11 +95,12 @@ class CropsAdapter(
     }
 
     override fun getItemCount(): Int {
-        return if (listCrops.isEmpty()) 1 else listCrops.size + 1
+        return if (listGarden.isEmpty()) 1 else listGarden.size + 1
     }
 
     interface OnCropsClickListener {
         fun onBlankClick()
-        fun onCropsClick(crop: Crops, dataSensor: DataSensor)
+        fun onCropsClick(garden: Garden)
     }
+
 }

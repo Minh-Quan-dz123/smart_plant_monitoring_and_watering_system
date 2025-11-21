@@ -1,4 +1,6 @@
 package com.example.project_iot_auto_watering.data.model.request
 
-class EspDeviceRequest {
+data class EspDeviceRequest(
+    val espId: String
+) {
 }

@@ -42,6 +42,16 @@
         app:layout_constraintTop_toTopOf="@+id/icon_back" />
 
     <ImageView
+        android:id="@+id/img_menu"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="10dp"
+        android:src="@drawable/icon_more"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_name_crop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_name_crop" />
+
+    <ImageView
         android:id="@+id/img_date"
         android:layout_width="36dp"
         android:layout_height="36dp"
@@ -55,9 +65,10 @@
         android:id="@+id/tv_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:text="@string/date"
+        android:layout_marginStart="8dp"
+        android:hint="@string/date"
         android:textSize="20sp"
+        android:maxWidth="111dp"
         app:layout_constraintBottom_toBottomOf="@+id/img_date"
         app:layout_constraintStart_toEndOf="@+id/img_date"
         app:layout_constraintTop_toTopOf="@+id/img_date" />
@@ -68,20 +79,21 @@
         android:layout_height="36dp"
         android:src="@drawable/icon_time"
         app:layout_constraintBottom_toBottomOf="@+id/img_date"
-        app:layout_constraintEnd_toStartOf="@+id/tv_time"
-        app:layout_constraintHorizontal_bias="0.95"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.4"
         app:layout_constraintStart_toEndOf="@+id/tv_date"
         app:layout_constraintTop_toTopOf="@+id/img_date" />
 
     <TextView
         android:id="@+id/tv_time"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
-        android:text="@string/_11_11"
+        android:layout_marginHorizontal="8dp"
+        android:hint="@string/_11_11"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/tv_date"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/img_time"
         app:layout_constraintTop_toTopOf="@+id/tv_date" />
 
     <ImageView
@@ -97,8 +109,8 @@
         android:id="@+id/tv_repeat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:text="@string/h_ng_ng_y"
+        android:layout_marginStart="8dp"
+        android:hint="@string/no"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/img_repeat"
         app:layout_constraintStart_toEndOf="@+id/img_repeat"
@@ -110,36 +122,56 @@
         android:layout_height="36dp"
         android:src="@drawable/icon_duration"
         app:layout_constraintBottom_toBottomOf="@+id/tv_repeat"
-
         app:layout_constraintStart_toStartOf="@+id/img_time"
         app:layout_constraintTop_toTopOf="@+id/tv_repeat" />
 
-    <TextView
+    <EditText
         android:id="@+id/tv_duration"
         android:layout_width="wrap_content"
+        android:maxWidth="46dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
-        android:text="@string/time_duration"
+        android:background="@null"
+        android:ellipsize="end"
+        app:layout_constraintHorizontal_bias="0.0"
+        android:inputType="number"
+        android:maxLines="1"
+        android:hint="@string/_10"
+        android:textColor="#7DD1EB"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_repeat"
+        app:layout_constraintBottom_toBottomOf="@+id/img_duration"
         app:layout_constraintStart_toStartOf="@+id/tv_time"
-        app:layout_constraintTop_toTopOf="@+id/tv_repeat" />
+        app:layout_constraintTop_toTopOf="@+id/img_duration"
+   />
+
+    <TextView
+        android:id="@+id/unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/second"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/tv_duration"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_duration"
+        app:layout_constraintEnd_toEndOf="@+id/tv_time"
+        app:layout_constraintTop_toTopOf="@+id/tv_duration"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.18"/>
+
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_save"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="18dp"
         android:backgroundTint="#7DD1EB"
         android:text="@string/save"
         android:textColor="@color/black"
         android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.888"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/img_duration"
         app:layout_constraintTop_toBottomOf="@+id/img_duration"
         app:strokeColor="#1B780F"
         app:strokeWidth="2dp" />
+
 
     <ImageView
         android:id="@+id/img_bgr"
@@ -149,7 +181,8 @@
         android:background="@drawable/rounded_bgr"
         app:layout_constraintBottom_toTopOf="@+id/tv_note"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.6"
+        app:layout_constraintVertical_bias="0.8"
+        app:layout_constraintHeight_percent="0.55"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_save" />
 
@@ -180,8 +213,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:text="@string/note"
         android:paddingStart="10dp"
+        android:text="@string/note"
         android:textSize="15sp"
         android:textStyle="italic|bold"
         app:layout_constraintBottom_toBottomOf="parent"

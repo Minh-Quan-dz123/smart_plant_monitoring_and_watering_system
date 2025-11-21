@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/_no"
+        android:title="@string/no" />
+    <item
+        android:id="@+id/_daily"
+        android:title="@string/_1day" />
+    <item
+        android:id="@+id/_week2"
+        android:title="@string/_week_2" />
+    <item
+        android:id="@+id/_week3"
+        android:title="@string/_week_3" />
+    <item
+        android:id="@+id/_week4"
+        android:title="@string/_week_4" />
+    <item
+        android:id="@+id/_week5"
+        android:title="@string/_week_5" />
+    <item
+        android:id="@+id/_week6"
+        android:title="@string/_week_6" />
+    <item
+        android:id="@+id/_week7"
+        android:title="@string/_week_7" />
+    <item
+        android:id="@+id/_week8"
+        android:title="@string/_week_8" />
 </menu>

@@ -18,8 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         app:layout_constraintEnd_toStartOf="@+id/img_edit"
+        android:maxLines="2"
         android:ellipsize="end"
-        android:maxLines="1"
         android:text="@string/schedule_water_tree"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -45,7 +45,7 @@
         android:layout_marginEnd="5dp"
         android:padding="2dp"
         android:src="@drawable/icon_remove"
-        app:layout_constraintBottom_toTopOf="@+id/img_line"
+        app:layout_constraintBottom_toBottomOf="@+id/img_edit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_edit" />
 

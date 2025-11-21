@@ -40,6 +40,12 @@
         android:name="com.example.project_iot_auto_watering.ui.home.HomeContainerFragment"
         android:label="Fragment Home Container">
 
+        <action
+            android:id="@+id/action_fragmentHomeContainer_to_fragmentCrops"
+            app:destination="@id/fragmentCrops" />
+        <action
+            android:id="@+id/action_fragmentHomeContainer_to_fragmentLogin"
+            app:destination="@id/fragmentLogin" />
     </fragment>
     <fragment
         android:id="@+id/fragmentHistory"
@@ -64,6 +70,9 @@
         <action
             android:id="@+id/action_fragmentCrops_to_fragmentHistory"
             app:destination="@id/fragmentHistory" />
+        <action
+            android:id="@+id/action_fragmentCrops_to_fragmentSetting"
+            app:destination="@id/fragmentSetting" />
     </fragment>
     <fragment
         android:id="@+id/fragmentDocument"
@@ -72,6 +81,15 @@
 
         <action
             android:id="@+id/action_fragmentDocument_to_fragmentCrops"
+            app:destination="@id/fragmentCrops" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragmentSetting"
+        android:name="com.example.project_iot_auto_watering.ui.setting.FragmentSetting"
+        android:label="Fragment Setting">
+
+        <action
+            android:id="@+id/action_fragmentSetting_to_fragmentCrops"
             app:destination="@id/fragmentCrops" />
     </fragment>
 </navigation>

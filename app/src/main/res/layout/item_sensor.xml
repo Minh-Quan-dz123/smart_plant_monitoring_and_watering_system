@@ -37,17 +37,17 @@
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/img_sensor"
-        app:layout_constraintEnd_toStartOf="@+id/img_delete"
+        app:layout_constraintEnd_toStartOf="@+id/tv_state_wifi"
         app:layout_constraintStart_toEndOf="@id/img_sensor"
         app:layout_constraintTop_toTopOf="@+id/img_sensor" />
 
     <ImageView
-        android:id="@+id/img_delete"
+        android:id="@+id/img_wifi"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_marginEnd="20dp"
         android:padding="3dp"
-        android:src="@drawable/icon_delete"
+        android:src="@drawable/icon_wifi"
         app:layout_constraintBottom_toBottomOf="@id/tv_name_sensor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_name_sensor" />
@@ -79,4 +79,18 @@
         app:layout_constraintStart_toStartOf="@+id/tv_name_crops"
         app:layout_constraintTop_toTopOf="@+id/tv_name_crops"
         app:layout_constraintWidth_percent="0.2" />
+
+    <TextView
+        android:id="@+id/tv_state_wifi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="5dp"
+        android:text="@string/connect"
+        android:textColor="#1577B4"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/img_wifi"
+        app:layout_constraintEnd_toStartOf="@+id/img_wifi"
+        app:layout_constraintTop_toTopOf="@+id/img_wifi" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
