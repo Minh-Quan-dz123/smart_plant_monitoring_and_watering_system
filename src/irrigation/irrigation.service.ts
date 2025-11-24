@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException, Inject, for
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MqttService } from 'src/mqtt/mqtt.service';
 import { IrrigationMode } from './irrigation-mode.enum';
+import { LogService } from 'src/log/log.service';
 
 export interface SensorReading {
   temperature: number;
@@ -25,6 +26,7 @@ export class IrrigationService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => MqttService))
     private mqttService: MqttService,
+    private logService: LogService
   ) {}
 
 //auto
@@ -81,7 +83,7 @@ export class IrrigationService {
       }
     }
 
-    if (plant.minAirHumidity !== null || plant.maxAirHumidity !== null) {
+    if (plant.minAirHumidity !== null || plant.maxAirHumidity !== null ) {
       if (plant.minAirHumidity !== null && sensorData.airHumidity < plant.minAirHumidity) {
         alerts.push({
           type: 'airHumidity',
@@ -99,7 +101,16 @@ export class IrrigationService {
         });
       }
     }
-
+    if (plant.minSoilMoisture !== null ) {
+    if (plant.minSoilMoisture !== null && sensorData.soilMoisture <  plant.minSoilMoisture) {
+      alerts.push({
+        type: 'soilMoisture',
+        message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%. Bắt đầu tiến hành quá trình tưới nước trong 2p)`,
+        currentValue: sensorData.soilMoisture,
+        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
+      });
+    }
+    }
     // // kiểm tra -> tưới
     // if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
     //   alerts.push({
@@ -152,6 +163,7 @@ export class IrrigationService {
   }
 
   //manual
+  //bật máy bơm
   async startIrrigation(gardenId: number, duration: number = 2): Promise<void> {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
@@ -214,6 +226,40 @@ export class IrrigationService {
     this.logger.warn(`Chưa nhận phản hồi từ ESP vườn #${gardenId} sau 10 giây`);
   }
   }
+
+   //dừng máy bơm
+    async stopIrrigation(gardenId: number): Promise<void> {
+      const garden = await this.prisma.garden.findUnique({
+        where: { id: gardenId },
+      }) as any;
+  
+      if (!garden) {
+        throw new NotFoundException(`Vườn với ID ${gardenId} không tồn tại`);
+      }
+  
+      if (!garden.espId || garden.espId === '-1') {
+        throw new NotFoundException(`Vườn ${gardenId} chưa được kết nối với ESP device`);
+      }
+  
+      // Gửi lệnh dừng qua MQTT
+      await this.mqttService.sendGardenCommand(garden.espId, 'off');
+  
+      // Chuyển về OFF (không có chế độ nào)
+      await this.prisma.garden.update({
+        where: { id: gardenId },
+        data: { irrigationMode: null } as any,
+      });
+  
+      // Lưu vào database
+      await this.prisma.irrigation.create({
+        data: {
+          gardenId: gardenId,
+          status: false,
+        },
+      });
+  
+      this.logger.log(` Đã dừng tưới vườn #${gardenId}`);
+    }
 
 
   // update irrigation mode
@@ -359,5 +405,9 @@ export class IrrigationService {
       }, interval);
     });
   }
-}
+
+  }
+
+
+
 

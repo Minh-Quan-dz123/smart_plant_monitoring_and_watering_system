@@ -442,7 +442,7 @@ export class MqttService implements OnModuleInit {
       const { pumpState, statusMessage, successFlag } = this.normalizePumpFeedback(feedback); //chuẩn hóa
 
       this.logger.log(` Feedback từ garden ${gardenId}: ${JSON.stringify(feedback)}`);
-//cập nhật trạng thái
+      //cập nhật trạng thái
       const updateStatusGarden = await this.prisma.garden.update({
         where: { id: gardenId },
         data: {
