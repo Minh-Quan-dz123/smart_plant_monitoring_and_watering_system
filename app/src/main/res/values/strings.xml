@@ -46,7 +46,7 @@
     <string name="per"><b>%</b></string>
     <string name="soil">Độ ẩm đất</string>
     <string name="state_sprinkler">Hãy tưới nước cho cây</string>
-    <string name="_30_ph_t">30 phút</string>
+    <string name="_30_ph_t">0 phút</string>
     <string name="next_watering">Lần tưới tiếp</string>
     <string name="count_down">Đếm ngược</string>
     <string name="_00_00">00:00</string>
@@ -64,6 +64,9 @@
     <string name="th_i_gian_06_45">Thời gian: 06:45</string>
     <string name="th_i_gian_t_i_10s">Thời gian tưới: 10s</string>
     <string name="l_ng_n_c_2l">Lượng nước: 2l</string>
+    <string name="status">Trạng thái tưới</string>
+    <string name="type">Chế độ tưới</string>
+    <string name="note_log">Ghi chú: </string>
     <string name="input_crops">Nhập cây của bạn</string>
     <string name="input_device">Nhập ID của thiết bị</string>
     <string name="input_duration">Nhập thời gian tưới</string>
@@ -119,5 +122,7 @@
     <string name="Off">Off</string>
     <string name="connect">Đã kết nối</string>
     <string name="disconnect">Chưa kết nối</string>
-
+    <string name="complete">completed</string>
+    <string name="failed">failed</string>
+    <string name="cancelled">cancelled</string>
 </resources>

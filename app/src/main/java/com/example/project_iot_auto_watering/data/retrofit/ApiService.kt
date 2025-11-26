@@ -10,6 +10,7 @@ import com.example.project_iot_auto_watering.data.model.request.ScheduleBodyUpda
 import com.example.project_iot_auto_watering.data.model.response.DataEspAll
 import com.example.project_iot_auto_watering.data.model.response.EspDevice
 import com.example.project_iot_auto_watering.data.model.response.Garden
+import com.example.project_iot_auto_watering.data.model.response.IrrigationLog
 import com.example.project_iot_auto_watering.data.model.response.IrrigationMode
 import com.example.project_iot_auto_watering.data.model.response.Message
 import com.example.project_iot_auto_watering.data.model.response.Plant
@@ -97,6 +98,12 @@ interface ApiService {
 
     @GET("irrigation/{gardenId}/pump-status")
     suspend fun getPumpStatus(@Path("gardenId") gardenId: Int,@Header("authorization") token: String): Response<PumpStatus>
+
+    @GET("log/garden/{gardenId}")
+    suspend fun getLogGarden(@Path("gardenId") gardenId: Int,@Header("authorization")token: String): Response<List<IrrigationLog>>
+
+    @DELETE("log/{id}")
+    suspend fun deleteLogGarden(@Path("id") id:Int,@Header("authorization") token: String): Response<IrrigationLog>
 
 }
 

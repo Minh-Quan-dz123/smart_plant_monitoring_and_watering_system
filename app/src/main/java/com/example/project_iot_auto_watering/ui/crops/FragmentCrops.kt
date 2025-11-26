@@ -23,9 +23,13 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.os.CountDownTimer
 import android.widget.EditText
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.project_iot_auto_watering.R
 import com.example.project_iot_auto_watering.data.model.request.DurationManual
@@ -41,6 +45,8 @@ import com.example.project_iot_auto_watering.service.IrrigationForegroundService
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenVMFactory
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenViewModel
 import com.example.project_iot_auto_watering.util.NavOption
+import com.example.project_iot_auto_watering.util.ObjectUtils
+import kotlinx.coroutines.launch
 import java.io.File
 
 class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
@@ -102,10 +108,11 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         tokenAuth = requireContext().getSharedPreferences("Auth", Context.MODE_PRIVATE)
             .getString("token", "").toString()
 
+        binding.tvTime.text= ObjectUtils.nextTimeWatering
         initMenuPopup()
         initMenuModePopup()
 
-        //
+        //lấy trạng thái bơm khi mới vào ứng dụng
         getStateIrrigation()
         //
         getModeIrrigation()
@@ -225,8 +232,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                             stopPumpNotification()
                             binding.tvState.text = m
                             stateWatering = false
-                            binding.imgSprinkler.imageTintList=
-                                ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.black_off))
+                            setViewPumpOff()
                         }
                         Toast.makeText(requireContext(), m, Toast.LENGTH_SHORT).show()
                     }
@@ -313,6 +319,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
             Toast.makeText(context, "File không tồn tại", Toast.LENGTH_SHORT).show()
             return
         }
+        //đường dẫn .fileprovider để bảo mật hơn
         val photoUri = FileProvider.getUriForFile(
             requireContext(),
             "com.example.project_iot_auto_watering.fileprovider",
@@ -360,6 +367,16 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                 binding.tvModeSpecific.text = getString(R.string.auto)
             }
         }
+        gardenViewModel.pumpStatus.observe(viewLifecycleOwner){pumpStatus->
+            if(pumpStatus.pumpStatus=="on"){
+                binding.tvState.text="Vườn đang tưới"
+                setViewPumpOn()
+            }
+            else{
+                binding.tvState.text="Hãy tưới nước cho cây"
+                setViewPumpOff()
+            }
+        }
 
     }
 
@@ -368,24 +385,32 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         gardenViewModel.getIrrigationMode(gardenId, tokenAuth)
     }
 
-    private fun getStateIrrigation() {}
+    //lấy trạng thái máy bơm
+    private fun getStateIrrigation() {
+        lifecycleScope.launch {
+            gardenViewModel.getPumpStatus(gardenViewModel.idGarden,tokenAuth){
+
+            }
+        }
+    }
 
     private fun startIrrigation(gardenId:Int){
+        binding.progressBar.visibility=View.VISIBLE
         Toast.makeText(requireContext(),"Vui lòng đợi máy bơm bật nhé :))", Toast.LENGTH_SHORT).show()
         binding.img1.setOnClickListener(null)
-
         gardenViewModel.startIrrigation(
             gardenId,
             DurationManual(durationManual),
             tokenAuth
         ) { m ->
+            binding.progressBar.visibility=View.GONE
             Toast.makeText(requireContext(), m, Toast.LENGTH_SHORT).show()
             if (m != "") {
-                binding.tvState.text = m
+                startRunDuration(durationManual*60,binding.tvCountDown)
                 stateWatering = true
-                binding.imgSprinkler.imageTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_watering))
+                setViewPumpOn()
             }
+            binding.tvState.text = m
             startPumpNotification(gardenId)
             Toast.makeText(requireContext(),"Vui lòng nhập thời gian hợp lệ", Toast.LENGTH_SHORT).show()
             binding.img1.setOnClickListener(this)
@@ -404,5 +429,55 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         val intent = Intent(requireContext(), IrrigationForegroundService::class.java)
         requireContext().stopService(intent)
     }
+
+    private fun startRunDuration(totalSecond:Int,tvCountDown: TextView){
+        val totalMillis=totalSecond*1000L
+        if(totalSecond>3600){
+
+            val timer=object: CountDownTimer(totalMillis,1000){
+                override fun onFinish() {
+                    tvCountDown.text="00:00"
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                    val hours=millisUntilFinished/1000/3600
+                    val minutes=(millisUntilFinished/1000%3600)/60
+                    val seconds=millisUntilFinished/1000%60
+
+                    tvCountDown.text= String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                }
+            }
+            timer.start()
+        }
+        else{
+            val timer=object: CountDownTimer(totalMillis,1000){
+                override fun onFinish() {
+                    tvCountDown.text="00:00"
+                }
+                override fun onTick(millisUntilFinished: Long) {
+                    val minutes=millisUntilFinished/1000/60
+                    val seconds=millisUntilFinished/1000%60
+
+                    tvCountDown.text= String.format("%02d:%02d", minutes, seconds)
+                }
+            }
+            timer.start()
+        }
+    }
+
+    private fun setViewPumpOn(){
+        val color = ContextCompat.getColor(requireContext(), R.color.blue_watering)
+        binding.img1.setBackgroundColor(color)
+        binding.imgSprinkler.imageTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_watering))
+    }
+
+    private fun setViewPumpOff(){
+        val color = ContextCompat.getColor(requireContext(), R.color.black_off)
+        binding.tvSprinkler.setTextColor(color)
+        binding.imgSprinkler.imageTintList=
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.black_off))
+    }
+
 
 }

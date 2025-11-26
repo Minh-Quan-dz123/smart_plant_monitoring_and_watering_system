@@ -12,6 +12,7 @@ import com.example.project_iot_auto_watering.data.model.request.ModeIrrigation
 import com.example.project_iot_auto_watering.data.model.response.DataEspAll
 import com.example.project_iot_auto_watering.data.model.response.EspDevice
 import com.example.project_iot_auto_watering.data.model.response.Garden
+import com.example.project_iot_auto_watering.data.model.response.IrrigationLog
 import com.example.project_iot_auto_watering.data.model.response.IrrigationMode
 import com.example.project_iot_auto_watering.data.model.response.PumpStatus
 import com.example.project_iot_auto_watering.data.repository.GardenRepository
@@ -23,6 +24,10 @@ import kotlin.io.path.Path
 class GardenViewModel(private val gardenRepository: GardenRepository) : ViewModel() {
     private var _listGarden = MutableLiveData<List<Garden>>()
     val listGarden: LiveData<List<Garden>> = _listGarden
+
+    private var _listLog = MutableLiveData<List<IrrigationLog>>()
+    val listLog: LiveData<List<IrrigationLog>> = _listLog
+
     var idGarden = -1
     var espId = ""
 
@@ -208,6 +213,37 @@ class GardenViewModel(private val gardenRepository: GardenRepository) : ViewMode
                 Log.d("DEBUG", "Success Get Pump Status")
             } catch (e: Exception) {
                 Log.d("DEBUG", "Fail Get Pump Status")
+            }
+        }
+    }
+
+    fun getLogGarden(gardenId: Int,token: String,callBack: (String) -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val kq = gardenRepository.getLogGarden(gardenId,token)
+                withContext(Dispatchers.Main) {
+                    _listLog.value = kq
+                    Log.d("DEBUG", "Success get list log")
+                }
+            } catch (e: Exception) {
+                Log.d("DEBUG", "Fail get list log")
+            }
+        }
+    }
+
+    fun deleteLog(id:Int,token: String,callBack: (String) -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val kq = gardenRepository.deleteLog(id,token)
+                withContext(Dispatchers.Main) {
+                    callBack(kq.toString())
+                    Log.d("DEBUG", "Success delete log")
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    callBack("fail")
+                }
+                Log.d("DEBUG", "Fail delete log")
             }
         }
     }

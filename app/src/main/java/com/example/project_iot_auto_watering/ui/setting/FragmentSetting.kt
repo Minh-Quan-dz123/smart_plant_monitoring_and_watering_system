@@ -34,10 +34,13 @@ import com.example.project_iot_auto_watering.ui.setting.adapter.OnClickIcon
 import com.example.project_iot_auto_watering.ui.setting.adapter.checkRepeat
 import com.example.project_iot_auto_watering.ui.setting.viewmodel.ScheduleVMFactory
 import com.example.project_iot_auto_watering.ui.setting.viewmodel.ScheduleViewModel
+import com.example.project_iot_auto_watering.util.ObjectUtils
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Calendar
+import java.util.Locale
 import kotlin.math.min
 
 class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
@@ -103,7 +106,10 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
 
     private fun initObserve() {
         scheduleViewModel.listSchedule.observe(viewLifecycleOwner) { list ->
-            adapterSchedule.submitList(list)
+            if(list.isNotEmpty()){
+                periodOfTimeFromNow(list[0].date,list[0].time)
+                adapterSchedule.submitList(list)
+            }
         }
     }
 
@@ -398,4 +404,37 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
         binding.tvDuration.setText("")
     }
 
+    private fun periodOfTimeFromNow(date: String, time: String) {
+        val instant = Instant.parse(date)
+        val dateConvert = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+        val dateTime = "$dateConvert $time"
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val dateObj = sdf.parse(dateTime)
+        val timeMillis = dateObj?.time ?: 0L
+        val now = System.currentTimeMillis()
+        val diffMillis = timeMillis - now
+
+        if (diffMillis <= 0) {
+            println("Đã quá thời gian")
+            return
+        }
+
+        val seconds = diffMillis / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val days = hours / 24
+
+        val remHours = hours % 24
+        val remMinutes = minutes % 60
+
+        if(days>0){
+            ObjectUtils.nextTimeWatering="$days ngày"
+        }
+        else if(remHours>0){
+            ObjectUtils.nextTimeWatering="$remHours giờ"
+        }
+        else{
+            ObjectUtils.nextTimeWatering="$remMinutes phút"
+        }
+    }
 }

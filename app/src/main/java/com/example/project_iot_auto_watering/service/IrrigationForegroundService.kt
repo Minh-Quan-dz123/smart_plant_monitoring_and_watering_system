@@ -18,13 +18,13 @@ import kotlinx.coroutines.*
 class IrrigationForegroundService : Service() {
 
     private val channelId = "irrigation_service_channel"
-    private val notificationId=2004
+    private val notificationId = 2004
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val gardenRepository = GardenRepository(RetrofitInstance.api)
     private var tokenAuth = ""
-    private var gardenId=-1
+    private var gardenId = -1
 
-    private var gardenName=""
+    private var gardenName = ""
 
 
     override fun onCreate() {
@@ -35,8 +35,8 @@ class IrrigationForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        gardenId= intent?.getIntExtra("gardenId",-1)?.toInt() ?: -1
-        gardenName=intent?.getStringExtra("name").toString()
+        gardenId = intent?.getIntExtra("gardenId", -1)?.toInt() ?: -1
+        gardenName = intent?.getStringExtra("name").toString()
         val initialNotification = buildNotification("Đang kết nối...")
         startForeground(notificationId, initialNotification)
 
@@ -77,21 +77,32 @@ class IrrigationForegroundService : Service() {
                 )
             }
 
-        if(content=="on"){
+        val deleteIntent = Intent(this, NotificationReceiver::class.java).apply {
+            action = "STOP_IRRIGATION_SERVICE"
+        }
+
+        val deletePendingIntent = PendingIntent.getBroadcast(
+            this, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT
+                    or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        if (content == "on") {
             return NotificationCompat.Builder(this, channelId)
                 .setContentTitle("Trạng thái máy bơm")
-                .setContentText("$gardenName: $content")
+                .setContentText("$gardenName: máy bơm đang bơm - $content")
                 .setSmallIcon(R.drawable.icon_sprinkler)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build()
         }
+
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Trạng thái máy bơm")
             .setContentText(content)
             .setSmallIcon(R.drawable.icon_sprinkler)
             .setContentIntent(pendingIntent)
             .setOngoing(false)
+            .setDeleteIntent(deletePendingIntent)
             .build()
     }
 
