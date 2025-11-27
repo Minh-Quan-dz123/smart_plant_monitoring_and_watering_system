@@ -46,7 +46,7 @@ export class IrrigationService {
 
     const plant = garden.plant;
   
-    // let shouldIrrigate = false;
+    let shouldIrrigate = false;
 
     if (garden.irrigationMode === 'auto') {
       try {
@@ -101,66 +101,51 @@ export class IrrigationService {
         });
       }
     }
-    if (plant.minSoilMoisture !== null ) {
-    if (plant.minSoilMoisture !== null && sensorData.soilMoisture <  plant.minSoilMoisture) {
+       // kiểm tra -> tưới
+    if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
       alerts.push({
         type: 'soilMoisture',
-        message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%. Bắt đầu tiến hành quá trình tưới nước trong 2p)`,
+        message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
+        currentValue: sensorData.soilMoisture,
+        threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
+      });
+      shouldIrrigate = true;
+    }
+
+    if (plant.maxSoilMoisture !== null && sensorData.soilMoisture > plant.maxSoilMoisture) {
+      alerts.push({
+        type: 'soilMoisture',
+        message: `  Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
         currentValue: sensorData.soilMoisture,
         threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
       });
     }
+
+    if (alerts.length > 0) {
+      this.logger.warn(` Cảnh báo cho vườn #${gardenId}:`);
+      alerts.forEach((alert) => {
+        this.logger.warn(`   ${alert.message}`);
+      });
     }
+
+    // Tự động tưới nếu độ ẩm đất thấp - Gửi lệnh qua MQTT
+    if (shouldIrrigate) {
+      if (garden.espId && garden.espId !== '-1') {
+        await this.updateGardenPumpStatus(garden.id, {
+          pumpStatus: 'pending',
+          message: 'Đang gửi lệnh tưới tự động',
+        });
+        // Gửi status = 2 (Auto)
+        await this.mqttService.sendIrrigationStatus(garden.espId as any, 1);
+        await this.mqttService.sendPumpCommand(garden.espId as any, 10);
+        this.logger.log(` Đã gửi lệnh tưới tự động (Auto) cho vườn #${gardenId} - ESP ${garden.espId}`);
+      } 
+    }
+   
       return alerts;
 
   }
-    // // kiểm tra -> tưới
-    // if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
-    //   alerts.push({
-    //     type: 'soilMoisture',
-    //     message: `  Độ ẩm đất quá thấp: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.minSoilMoisture}%) - Tự động tưới`,
-    //     currentValue: sensorData.soilMoisture,
-    //     threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
-    //   });
-    //   shouldIrrigate = true;
-    // }
-
-    // if (plant.maxSoilMoisture !== null && sensorData.soilMoisture > plant.maxSoilMoisture) {
-    //   alerts.push({
-    //     type: 'soilMoisture',
-    //     message: `  Độ ẩm đất quá cao: ${sensorData.soilMoisture.toFixed(1)}% (ngưỡng: ${plant.maxSoilMoisture}%)`,
-    //     currentValue: sensorData.soilMoisture,
-    //     threshold: { min: plant.minSoilMoisture ?? undefined, max: plant.maxSoilMoisture ?? undefined },
-    //   });
-    // }
-
-    // if (alerts.length > 0) {
-    //   this.logger.warn(` Cảnh báo cho vườn #${gardenId}:`);
-    //   alerts.forEach((alert) => {
-    //     this.logger.warn(`   ${alert.message}`);
-    //   });
-    // }
-
-    // // Tự động tưới nếu độ ẩm đất thấp - Gửi lệnh qua MQTT
-    // if (shouldIrrigate) {
-    //   if (garden.espId && garden.espId !== '-1') {
-    //     await this.updateGardenPumpStatus(garden.id, {
-    //       pumpStatus: 'pending',
-    //       message: 'Đang gửi lệnh tưới tự động',
-    //     });
-    //     // Gửi status = 2 (Auto)
-    //     await this.mqttService.sendIrrigationStatus(garden.espId as any, 2);
-    //     await this.mqttService.sendPumpCommand(garden.espId as any, 60);
-    //     this.logger.log(` Đã gửi lệnh tưới tự động (Auto) cho vườn #${gardenId} - ESP ${garden.espId}`);
-    //   } else {
-    //     this.logger.warn(` Vườn ${gardenId} chưa được kết nối với ESP device - Không thể tưới tự động`);
-    //     await this.updateGardenPumpStatus(garden.id, {
-    //       pumpStatus: 'error',
-    //       message: 'Vườn chưa được kết nối với ESP device - Không thể tưới tự động',
-    //       success: false,
-    //     });
-    //   }
-    // }
+ 
   
 
   //manual
