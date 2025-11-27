@@ -111,6 +111,9 @@ export class IrrigationService {
       });
     }
     }
+      return alerts;
+
+  }
     // // kiểm tra -> tưới
     // if (plant.minSoilMoisture !== null && sensorData.soilMoisture < plant.minSoilMoisture) {
     //   alerts.push({
@@ -158,9 +161,7 @@ export class IrrigationService {
     //     });
     //   }
     // }
-    return alerts;
-
-  }
+  
 
   //manual
   //bật máy bơm
@@ -407,7 +408,3 @@ export class IrrigationService {
   }
 
   }
-
-
-
-

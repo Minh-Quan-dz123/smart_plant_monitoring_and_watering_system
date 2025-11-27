@@ -43,7 +43,7 @@ export class LogController {
   async getLogsByGarden(
     @Param('gardenId', ParseIntPipe) gardenId: number,
     @Query('limit') limit?: number,
-    @Req() req?: any,
+    @Req() req? : any,
   ) {
     // Kiểm tra user có quyền xem vườn này không
     const garden = await this.prisma.garden.findUnique({

@@ -1,3 +1,4 @@
+
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateScheduleDto } from './dto/createSchedule.dto';
@@ -162,14 +163,7 @@ export class ScheduleService {
         durationSeconds,
         repeat: repeat ?? (date ? 'once' : null),
         gardenId,
-      },
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
+      }
     });
 
     this.logger.log(` [CREATE SCHEDULE] Đã tạo schedule thành công - ID: ${created.id}`);
@@ -205,14 +199,7 @@ export class ScheduleService {
 
     return this.prisma.schedule.findMany({
       where: { gardenId },
-      orderBy: { time: 'asc' },
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
+      orderBy: { time: 'asc' }
     });
   }
 
@@ -233,14 +220,7 @@ export class ScheduleService {
       orderBy: [
         { gardenId: 'asc' },
         { time: 'asc' },
-      ],
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
+      ]
     });
   }
 
@@ -295,14 +275,7 @@ export class ScheduleService {
     // Cập nhật schedule
     const updated = await this.prisma.schedule.update({
       where: { id },
-      data,
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
+      data
     });
 
     // Publish toàn bộ schedules của vườn sang ESP
@@ -340,4 +313,3 @@ export class ScheduleService {
     return deleted;
   }
 }
-

@@ -26,7 +26,9 @@ export class LogService {
       });
 
       if (!garden) {
-        throw new NotFoundException(`Vườn với ID ${data.gardenId} không tồn tại`);
+        throw new NotFoundException(
+          `Vườn với ID ${data.gardenId} không tồn tại`,
+        );
       }
 
       // Tạo log
@@ -48,7 +50,9 @@ export class LogService {
         },
       });
 
-      this.logger.log(` Đã tạo log tưới cho vườn ${data.gardenId}: ${data.duration} giây`);
+      this.logger.log(
+        ` Đã tạo log tưới cho vườn ${data.gardenId}: ${data.duration} giây`,
+      );
       return log;
     } catch (error) {
       this.logger.error(` Lỗi tạo log tưới: ${error.message}`);
@@ -74,13 +78,6 @@ export class LogService {
       where: { gardenId },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
     });
   }
 
@@ -104,13 +101,6 @@ export class LogService {
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      include: {
-        garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
     });
   }
 
@@ -123,12 +113,13 @@ export class LogService {
       where: { id },
       include: {
         garden: {
-          include: {
-            plant: true,
-          },
-        },
-      },
+          select: {
+            userId: true,
+          }
+        }
+      }
     });
+
 
     if (!log) {
       throw new NotFoundException(`Log với ID ${id} không tồn tại`);
@@ -155,4 +146,3 @@ export class LogService {
     });
   }
 }
-

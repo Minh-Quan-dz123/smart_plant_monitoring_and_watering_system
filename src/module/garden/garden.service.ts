@@ -46,11 +46,7 @@ export class GardenService {
         userId,
         plantId,
         espId: "-1", // Mặc định chưa kết nối ESP device
-      },
-      include: { 
-        plant: true,
-        espDevice: true,
-      },
+      }
     });
   }
   //xem vuon bang id
@@ -158,11 +154,7 @@ export class GardenService {
     // Cập nhật espId cho vườn
     const updatedGarden = await this.prisma.garden.update({
       where: { id: gardenId },
-      data: { espId },
-      include: {
-        plant: true,
-        espDevice: true,
-      },
+      data: { espId }
     });
 
     // Báo cho ESP biết vườn đã được thêm/xóa
