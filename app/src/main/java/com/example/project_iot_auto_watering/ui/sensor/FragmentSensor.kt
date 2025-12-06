@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +28,8 @@ import com.example.project_iot_auto_watering.databinding.FragmentSensorBinding
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenVMFactory
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenViewModel
 import com.example.project_iot_auto_watering.ui.sensor.adapter.AdapterDevice
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class FragmentSensor : Fragment(), View.OnClickListener {
     private var _binding: FragmentSensorBinding? = null
@@ -108,6 +111,12 @@ class FragmentSensor : Fragment(), View.OnClickListener {
                     .setMessage("Bạn có muốn kết nối wifi cho esp không?")
                     .setPositiveButton("Có"){_,_->
                         openSmartConfigApp()
+                        lifecycleScope.launch {
+                            for(i in 1..20){
+                                delay(15000)
+                                gardenViewModel.getAllDataEsp(tokenAuth.toString()){}
+                            }
+                        }
                     }
                     .setNegativeButton("Không"){dialog,_->
                         dialog.dismiss()
