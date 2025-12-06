@@ -24,6 +24,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.CountDownTimer
+import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -144,7 +145,18 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                 }
 
                 R.id.delete -> {
-
+                    gardenViewModel.deleteGarden(gardenViewModel.idGarden,tokenAuth){isState->
+                        if(isState){
+                            Toast.makeText(requireContext(),"Xóa thành công!", Toast.LENGTH_SHORT).show()
+                            lifecycleScope.launch {
+                                deleteImg()
+                            }
+                            findNavController().popBackStack()
+                        }
+                        else{
+                            Toast.makeText(requireContext(),"Xóa thất bại!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             }
             true
@@ -311,6 +323,19 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         )
         takePictureLauncher.launch(photoUri)
     }
+
+    private fun deleteImg() {
+        val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val file = File(dir, "${mainViewModel.nameGarden}.jpg")
+
+        if (file.exists()) {
+            val deleted = file.delete()
+            Log.d("DeleteImg", "Xoá file: $deleted - ${file.absolutePath}")
+        } else {
+            Log.d("DeleteImg", "File không tồn tại: ${file.absolutePath}")
+        }
+    }
+
 
     private fun getPictureGarden() {
         val picturesDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)

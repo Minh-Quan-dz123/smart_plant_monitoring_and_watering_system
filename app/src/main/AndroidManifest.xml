@@ -58,6 +58,10 @@
             android:foregroundServiceType="dataSync"
         />
         <receiver android:name=".service.NotificationReceiver" />
-    </application>
 
+    </application>
+    <queries>
+        <package android:name="com.haidang.iap2app" />
+        <package android:name="com.haialab.smartconfigesp" />
+    </queries>
 </manifest>

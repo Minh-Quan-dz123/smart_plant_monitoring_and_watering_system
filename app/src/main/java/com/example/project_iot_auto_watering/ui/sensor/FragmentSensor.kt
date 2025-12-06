@@ -1,14 +1,19 @@
 package com.example.project_iot_auto_watering.ui.sensor
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.animation.content.Content
@@ -36,6 +41,7 @@ class FragmentSensor : Fragment(), View.OnClickListener {
     private val listEsp: MutableList<DataEspAll> = mutableListOf()
 
     private var tokenAuth: String? = ""
+    var cntClickWifi=0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,7 +80,43 @@ class FragmentSensor : Fragment(), View.OnClickListener {
 
     private fun initAdapter() {
         rcvDevice = binding.rcvSensor
-        adapterDevice = AdapterDevice(listEsp)
+        adapterDevice = AdapterDevice(listEsp){isState->
+            if(isState){
+                if(cntClickWifi==0){
+                    Toast.makeText(requireContext(),"Đã kết nối, click lần 2 để ngắt kết nối!",
+                        Toast.LENGTH_SHORT).show()
+                    cntClickWifi++
+                }
+                else{
+                    val dialogConfirm= AlertDialog.Builder(requireContext())
+                        .setTitle("Wifi connecting...")
+                        .setMessage("Bạn có muốn tắt kết nối wifi không ?")
+                        .setPositiveButton("Có"){_,_->
+
+                        }
+                        .setNegativeButton("Không"){dialog,_->
+                            dialog.dismiss()
+                        }
+
+                    dialogConfirm.show()
+                }
+            }
+            else{
+                Toast.makeText(requireContext(),"xxx", Toast.LENGTH_SHORT).show()
+                val dialogConnect= AlertDialog.Builder(requireContext())
+                    .setMessage("Connect Wifi for ESP")
+                    .setMessage("Bạn có muốn kết nối wifi cho esp không?")
+                    .setPositiveButton("Có"){_,_->
+                        openSmartConfigApp()
+                    }
+                    .setNegativeButton("Không"){dialog,_->
+                        dialog.dismiss()
+                    }
+
+                dialogConnect.show()
+            }
+        }
+
         rcvDevice.layoutManager = LinearLayoutManager(requireContext())
         rcvDevice.adapter = adapterDevice
     }
@@ -93,6 +135,33 @@ class FragmentSensor : Fragment(), View.OnClickListener {
             R.id.icon_back -> {
                 Toast.makeText(requireContext(), "Click", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun openSmartConfigApp(){
+        val packageName = "com.haidang.iap2app"
+
+        try {
+            val intent = requireActivity()
+                .packageManager.getLaunchIntentForPackage(packageName)
+
+            if(intent != null){
+                // Ứng dụng đã được cài đặt, mở trực tiếp
+                startActivity(intent)
+            }
+            else{
+                // Ứng dụng chưa được cài đặt, chuyển hướng đến Play Store
+                // SỬA: Dùng chuỗi template Kotlin để đưa giá trị biến vào URL
+                val intentGg = Intent(
+                    Intent.ACTION_VIEW,
+                    "https://play.google.com/store/apps/details?id=$packageName".toUri()
+                )
+                startActivity(intentGg)
+                Toast.makeText(requireContext(), "App SmartConfig chưa được cài!", Toast.LENGTH_SHORT).show()
+            }
+        }catch (e: Exception){
+            e.printStackTrace()
+            Toast.makeText(requireContext(), "Không thể mở SmartConfig!", Toast.LENGTH_SHORT).show()
         }
     }
 }

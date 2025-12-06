@@ -57,17 +57,17 @@ class GardenViewModel(private val gardenRepository: GardenRepository) : ViewMode
         }
     }
 
-    fun deleteGarden(id: Int, token: String, callBack: (String) -> Unit) {
+    fun deleteGarden(id: Int, token: String, callBack: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = gardenRepository.deleteGarden(id, token)
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    callBack("Xóa thành công")
+                    callBack(true)
                     val updatedList = _listGarden.value?.filterNot { it.id == id }!!
                     _listGarden.value = updatedList
                     Log.d("DEBUG", "delete garden success")
                 } else {
-                    callBack("Xóa thất bại")
+                    callBack(false)
                     Log.d("DEBUG", "delete garden fail")
                 }
             }

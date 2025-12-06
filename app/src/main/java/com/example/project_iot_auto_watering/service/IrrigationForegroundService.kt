@@ -57,13 +57,13 @@ class IrrigationForegroundService : Service() {
 
             // update notification
             val updatedNotification = buildNotification(pump.pumpStatus)
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             manager.notify(notificationId, updatedNotification)
 
         } catch (e: Exception) {
             e.printStackTrace()
             val updatedNotification = buildNotification("Error: ${e.message}")
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             manager.notify(notificationId, updatedNotification)
         }
     }

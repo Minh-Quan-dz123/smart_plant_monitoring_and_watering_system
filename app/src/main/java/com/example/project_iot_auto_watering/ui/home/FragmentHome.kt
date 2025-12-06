@@ -140,9 +140,9 @@ class FragmentHome : Fragment(), View.OnClickListener,
         FragmentDialogAdd(this).show(parentFragmentManager, "Add")
     }
 
-    //thêm vường từ danh sách cây do hệ thống cung cấp
+    //thêm vườn từ danh sách cây do hệ thống cung cấp
     override fun onClickItemCrop(nameCrops: String, id: Int) {
-        val garden = CreateGarden(nameCrops, id)
+        val garden = CreateGarden("Vườn $nameCrops", id)
         viewModelGarden.createGarden(garden, token) { log ->
             Toast.makeText(requireContext(), log, Toast.LENGTH_SHORT).show()
         }
