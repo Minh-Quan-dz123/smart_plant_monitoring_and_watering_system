@@ -1,0 +1,39 @@
+@startuml
+actor User
+participant App as "Frontend (App)"
+participant Backend
+participant ESP as "ESP8266"
+
+== Chuyển sang chế độ tưới 1 nếu cần ==
+User -> App : Mở app, kiểm tra chế độ tưới
+alt Chế độ ≠ 1
+    App -> Backend : API set trạng thái tưới /garden/{esp_id}/setStatus/1
+    Backend -> ESP : Topic selects/{esp_id}/1
+    ESP -> ESP : Cập nhật chế độ tưới = 1
+    Backend -> App : Response thành công
+end
+
+== Tạo lịch tưới ==
+User -> App : Nhập thông tin lịch tưới
+note right: 3 lựa chọn:\n- 1 lần\n- Lặp lại mỗi ngày\n- Lặp theo thứ\n(dù ko ở chế độ 1 vẫn thêm được)
+App -> Backend : API set lịch tưới /garden/{esp_id}/schedule
+Backend -> ESP : Topic schedules/{esp_id}/add/{repeat, dayOfWeek, hour, minute, second, time} (dayOfWeek: 0-CN, 1-6 -> Thứ 2-7)
+ESP -> ESP : Thêm lịch tưới
+Backend -> App : Response thành công
+
+== Xóa 1 lịch tưới ==
+User -> App : Chọn lịch và bấm "Xóa"
+App -> Backend : API xóa lịch /garden/{esp_id}/schedule/delete
+Backend -> ESP : Topic schedule/{esp_id}/delete/{repeat, dayOfWeek, hour, minute, second, time}
+ESP -> ESP : Xóa lịch
+Backend -> App : Response thành công
+
+== Xóa tất cả lịch ==
+User -> App : Bấm "Xóa hết"
+App -> Backend : API xóa tất cả /garden/{esp_id}/schedule/deleteAll
+Backend -> ESP : Topic schedule/{esp_id}/delete/{repeat:-1}
+note right: repeat=-1 là xóa toàn bộ lịch
+ESP -> ESP : Xóa toàn bộ lịch
+Backend -> App : Response thành công
+@enduml
+
