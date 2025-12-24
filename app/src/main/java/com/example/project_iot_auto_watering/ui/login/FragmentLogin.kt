@@ -102,7 +102,6 @@ class FragmentLogin : Fragment(), View.OnClickListener {
             }
 
             R.id.forgotPassword -> {
-
             }
 
             R.id.signUp -> {

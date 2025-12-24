@@ -42,8 +42,9 @@ class AuthViewModel(val authRepository: AuthRepository) : ViewModel() {
                     Log.d("DEBUG", "Đăng ký thành công!")
                     callBack("success")
                 } else {
-                    Log.d("DEBUG", "${response.errorBody()?.string()}")
-                    callBack("${response.errorBody()?.string()}")
+                    val errorMessage = response.errorBody()?.string()
+                    Log.d("DEBUG", "$errorMessage")
+                    callBack("$errorMessage")
                 }
             }
         }

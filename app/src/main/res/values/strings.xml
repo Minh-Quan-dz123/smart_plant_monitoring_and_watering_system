@@ -69,6 +69,7 @@
     <string name="note_log">Ghi chú: </string>
     <string name="input_crops">Nhập cây của bạn</string>
     <string name="input_device">Nhập ID của thiết bị</string>
+    <string name="ssid_wifi">Danh sách wifi Esp</string>
     <string name="input_duration">Nhập thời gian tưới</string>
     <string name="dotdotdot">....</string>
     <string name="ok">OK</string>
@@ -122,6 +123,7 @@
     <string name="Off">Off</string>
     <string name="connect">Đã kết nối</string>
     <string name="disconnect">Chưa kết nối</string>
+    <string name="connect_wifi">Kết nối</string>
     <string name="complete">completed</string>
     <string name="failed">failed</string>
     <string name="cancelled">cancelled</string>

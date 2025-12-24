@@ -104,11 +104,12 @@ interface ApiService {
 
     @DELETE("log/{id}")
     suspend fun deleteLogGarden(@Path("id") id:Int,@Header("authorization") token: String): Response<IrrigationLog>
-
 }
+
 
 object RetrofitInstance {
     private const val BASE_URL_SERVER = "http://10.0.2.2:3000"
+    private const val URL_WIFI="http://192.168.4.1"
 
     val api: ApiService by lazy {
         Retrofit.Builder()

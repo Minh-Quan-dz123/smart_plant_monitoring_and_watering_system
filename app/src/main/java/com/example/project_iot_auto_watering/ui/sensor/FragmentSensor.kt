@@ -1,15 +1,32 @@
 package com.example.project_iot_auto_watering.ui.sensor
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteCantOpenDatabaseException
+import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.ScanResult
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiNetworkSpecifier
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -23,13 +40,19 @@ import com.example.project_iot_auto_watering.data.model.response.DataEspAll
 import com.example.project_iot_auto_watering.data.model.response.Garden
 import com.example.project_iot_auto_watering.data.repository.GardenRepository
 import com.example.project_iot_auto_watering.data.retrofit.RetrofitInstance
+import com.example.project_iot_auto_watering.databinding.DialogWifiEspBinding
 import com.example.project_iot_auto_watering.databinding.FragmentHomeContainerBinding
 import com.example.project_iot_auto_watering.databinding.FragmentSensorBinding
+import com.example.project_iot_auto_watering.databinding.ItemWifiBinding
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenVMFactory
 import com.example.project_iot_auto_watering.ui.home.viewmodel.GardenViewModel
 import com.example.project_iot_auto_watering.ui.sensor.adapter.AdapterDevice
+import com.example.project_iot_auto_watering.ui.sensor.adapter.AdapterWifi
+import com.example.project_iot_auto_watering.util.ObjectUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+
 
 class FragmentSensor : Fragment(), View.OnClickListener {
     private var _binding: FragmentSensorBinding? = null
@@ -40,11 +63,26 @@ class FragmentSensor : Fragment(), View.OnClickListener {
 
     private lateinit var adapterDevice: AdapterDevice
     private lateinit var rcvDevice: RecyclerView
-
+    private lateinit var adapterWifi: AdapterWifi
     private val listEsp: MutableList<DataEspAll> = mutableListOf()
 
     private var tokenAuth: String? = ""
-    var cntClickWifi=0
+    var cntClickWifi = 0
+    private val listSsidWifi = mutableListOf<String>()
+    val dialog = Dialog(requireContext())
+
+    val client = OkHttpClient()
+    val url_wifi = "http://192.168.4.1"
+
+    //quyền quét wifi
+    private val requestLocationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                scanWifi()
+            } else {
+                Toast.makeText(requireContext(), "Xin quyền bị từ chối!", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -82,47 +120,55 @@ class FragmentSensor : Fragment(), View.OnClickListener {
     }
 
     private fun initAdapter() {
+
         rcvDevice = binding.rcvSensor
-        adapterDevice = AdapterDevice(listEsp){isState->
-            if(isState){
-                if(cntClickWifi==0){
-                    Toast.makeText(requireContext(),"Đã kết nối, click lần 2 để ngắt kết nối!",
-                        Toast.LENGTH_SHORT).show()
+        adapterDevice = AdapterDevice(listEsp) { isState ->
+            if (isState) {
+                if (cntClickWifi == 0) {
+                    Toast.makeText(
+                        requireContext(), "Đã kết nối, click lần 2 để ngắt kết nối!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     cntClickWifi++
-                }
-                else{
-                    val dialogConfirm= AlertDialog.Builder(requireContext())
+                } else {
+                    val dialogConfirm = AlertDialog.Builder(requireContext())
                         .setTitle("Wifi connecting...")
                         .setMessage("Bạn có muốn tắt kết nối wifi không ?")
-                        .setPositiveButton("Có"){_,_->
+                        .setPositiveButton("Có") { _, _ ->
 
                         }
-                        .setNegativeButton("Không"){dialog,_->
+                        .setNegativeButton("Không") { dialog, _ ->
                             dialog.dismiss()
                         }
 
                     dialogConfirm.show()
                 }
-            }
-            else{
-                Toast.makeText(requireContext(),"xxx", Toast.LENGTH_SHORT).show()
-                val dialogConnect= AlertDialog.Builder(requireContext())
-                    .setMessage("Connect Wifi for ESP")
-                    .setMessage("Bạn có muốn kết nối wifi cho esp không?")
-                    .setPositiveButton("Có"){_,_->
-                        openSmartConfigApp()
-                        lifecycleScope.launch {
-                            for(i in 1..20){
-                                delay(15000)
-                                gardenViewModel.getAllDataEsp(tokenAuth.toString()){}
-                            }
-                        }
-                    }
-                    .setNegativeButton("Không"){dialog,_->
-                        dialog.dismiss()
-                    }
+            } else {
+//                val dialogConnect = AlertDialog.Builder(requireContext())
+//                    .setMessage("Connect Wifi for ESP")
+//                    .setMessage("Bạn có muốn kết nối wifi cho esp không?")
+//                    .setPositiveButton("Có") { _, _ ->
+//                    }
+//                    .setNegativeButton("Không") { dialog, _ ->
+//                        dialog.dismiss()
+//                    }
+//
+//                dialogConnect.show()
+                lifecycleScope.launch {
+                    //kết nối bên thứ 3
+//                    openSmartConfigApp()
 
-                dialogConnect.show()
+                    //đảm bảo wifi, location được bật
+                    ensureWifiAndLocationEnabled()
+                    //kết nối wifi cho esp dựa trên việc scan wifi
+                    checkPermissionAndScan()
+
+                    for (i in 1..12) {
+                        //cập nhật lại các esp khi trong vòng 3 phút kết nối
+                        gardenViewModel.getAllDataEsp(tokenAuth.toString()) {}
+                        delay(15000)
+                    }
+                }
             }
         }
 
@@ -147,18 +193,29 @@ class FragmentSensor : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun openSmartConfigApp(){
+    private fun checkPermissionAndScan() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            scanWifi()
+        }
+    }
+
+    private fun openSmartConfigApp() {
         val packageName = "com.haidang.iap2app"
 
         try {
             val intent = requireActivity()
                 .packageManager.getLaunchIntentForPackage(packageName)
 
-            if(intent != null){
+            if (intent != null) {
                 // Ứng dụng đã được cài đặt, mở trực tiếp
                 startActivity(intent)
-            }
-            else{
+            } else {
                 // Ứng dụng chưa được cài đặt, chuyển hướng đến Play Store
                 // SỬA: Dùng chuỗi template Kotlin để đưa giá trị biến vào URL
                 val intentGg = Intent(
@@ -166,11 +223,128 @@ class FragmentSensor : Fragment(), View.OnClickListener {
                     "https://play.google.com/store/apps/details?id=$packageName".toUri()
                 )
                 startActivity(intentGg)
-                Toast.makeText(requireContext(), "App SmartConfig chưa được cài!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "App SmartConfig chưa được cài!",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(requireContext(), "Không thể mở SmartConfig!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun scanWifi() {
+        val wifiManager = requireContext().getSystemService(WifiManager::class.java)
+        //tạo đối tượng broad cast nhận kết quả khi scan wifi xong
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                val results = wifiManager.scanResults
+                processResults(results)
+            }
+        }
+    }
+
+    private fun ensureWifiAndLocationEnabled() {
+        val wifiManager = requireContext().getSystemService(WifiManager::class.java)
+        if (wifiManager != null && wifiManager.isWifiEnabled) {
+
+        } else {
+            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+        }
+        val locationManager = requireContext().getSystemService(LocationManager::class.java)
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        }
+    }
+
+    private fun processResults(rs: List<ScanResult>) {
+
+        val wifiEsp = rs.first { it.wifiSsid.toString() == ObjectUtils.ssidWifiEsp }
+        //tạm thời thiết kế cho 1 card wifi của 1 esp
+        if (wifiEsp.toString().isEmpty()) {
+            listSsidWifi.add(wifiEsp.toString())
+        }
+        val item = DialogWifiEspBinding.inflate(layoutInflater)
+        item.imgX.setOnClickListener {
+            dialog.dismiss()
+        }
+        //adapter wifi
+        adapterWifi = AdapterWifi(listSsidWifi) { ssid ->
+            //kết nối wifi
+            connectWifi(ssid, item)
+        }
+        item.listWifi.adapter = adapterWifi
+        item.listWifi.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+
+        dialog.setContentView(item.root)
+        dialog.show()
+    }
+
+    private fun connectWifi(ssid: String, item: DialogWifiEspBinding) {
+        item.progressBar.visibility = View.VISIBLE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val specifier = WifiNetworkSpecifier.Builder()
+                .setSsid(ssid)
+                .setWpa2Passphrase("") // Nếu mạng bảo mật WPA2
+                .build()
+
+            val request = NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .setNetworkSpecifier(specifier)
+                .build()
+
+            val connectivityManager =
+                requireContext().getSystemService(ConnectivityManager::class.java)
+            val networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+
+                    //gắn với wifi esp
+                    connectivityManager.bindProcessToNetwork(network)
+
+
+                    requireActivity().runOnUiThread {
+                        Toast.makeText(
+                            requireContext(),
+                            "Đã kết nối Wi-Fi của ESP!", Toast.LENGTH_SHORT
+                        ).show()
+
+                        item.progressBar.visibility = View.GONE
+
+                        val intent = Intent(Intent.ACTION_VIEW, url_wifi.toUri())
+                        startActivity(intent)
+                        lifecycleScope.launch {
+                            dialog.dismiss()
+                            delay(45000)
+                            connectivityManager.bindProcessToNetwork(null)
+                        }
+                    }
+
+                }
+
+                override fun onUnavailable() {
+                    super.onUnavailable()
+
+                    //ngắt kết nối wifi esp tự động reconnect wifi ban đầu
+                    connectivityManager.bindProcessToNetwork(null)
+
+                    requireActivity().runOnUiThread {
+                        Toast.makeText(
+                            requireContext(),
+                            "Không kết nối được Wi-Fi ESP, quay lại Wi-Fi trước đó",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        item.progressBar.visibility = View.GONE
+                        dialog.dismiss()
+                    }
+                }
+            }
+
+            connectivityManager.requestNetwork(request, networkCallback)
         }
     }
 }
