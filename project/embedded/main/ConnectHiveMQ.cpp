@@ -16,11 +16,14 @@
 #include "WateringService.h"
 
 
-const char* mqtt_server ="394c577c67aa49a8812ab149ec4997dd.s1.eu.hivemq.cloud";//"60294ba1a7534e358c2dc4bc7b7cc9f9.s1.eu.hivemq.cloud";
+
+const char* mqtt_server ="60294ba1a7534e358c2dc4bc7b7cc9f9.s1.eu.hivemq.cloud";//"60294ba1a7534e358c2dc4bc7b7cc9f9.s1.eu.hivemq.cloud";
 const uint16_t mqtt_port = 8883; // tên port
-const char* mqtt_user = "sang2004";
-const char* mqtt_pass = "Sangdeptrai1";
+const char* mqtt_user = "MinhQuan225386";
+const char* mqtt_pass = "12348765@Mq";
 const char* esp_id = "0001"; // id của esp
+
+bool emerTurnOff = false;
 
 
 char topic1[64]; // conditions
@@ -43,7 +46,7 @@ void sendDataToHiveMQ(float temp, float hum, float soil)
 {
   // tạo json 
   char condition[60];
-  sprintf(condition, "{\"temp\": %.2f, \"hum\": %.2f, \"soil\": %.2f}", temp, hum, soil);
+  sprintf(condition, "{\"temp\": %.2f, \"humi\": %.2f, \"soil\": %.2f}", temp, hum, soil);
 
   client.beginMessage(topic1, false, 1);  // bắt đầu gửi
   client.print(condition);      // gửi payload
@@ -117,7 +120,11 @@ void callback(int messageSize)
   {
     // gán thời gian tưới
     status = 3;
-    wateringDuration = msg.toInt();
+    if(msg.toInt() <= 0)
+    {
+      emerTurnOff = true;
+    }
+    else wateringDuration = msg.toInt();
   }
 
   //3.3 nếu là topic 5: 

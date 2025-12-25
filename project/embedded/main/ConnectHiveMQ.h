@@ -17,6 +17,8 @@ extern const char* clientId;
 extern WiFiClientSecure espClient;
 extern MqttClient client;
 
+extern bool emerTurnOff;
+
 // khai báo hàm
 void setupMQTT();
 void callback(char *topic, byte* payload, unsigned int length);// hàm xử lý callback

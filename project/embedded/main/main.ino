@@ -44,6 +44,7 @@ void loop() {
       // kiểm tra đang ở trạng thái tưới nào
       if(status == 1) // tưới cây theo lịch
       {
+        printSchedules();
         // đã đến giờ tưới chưa
         if(checkIsTimeSchedule())
         {
@@ -93,21 +94,34 @@ void loop() {
   // 1 else kiểm tra hệ thống đang tưới cây ko - có
   else
   {
-    // kiểm tra đã hết thời gian tưới chưa
-    if(millis() - t_pump >= TIME_ON_PUMP)
+    if(emerTurnOff == false)// tắt khẩn cấp chưa hoạt động
     {
+      // kiểm tra đã hết thời gian tưới chưa
+      if(millis() - t_pump >= TIME_ON_PUMP)
+      {
+        CYCLE = 10;
+        Serial.println("may bom da tat");
+        pumpStatus = false;
+        turnOffPump(); // tắt máy bơm
+        if(status == 3) status = 0; // tắt tưới ngay
+        
+      }
+      else// chưa tưới xong
+      {
+        delay(50);
+        return;
+      }
+    }
+    else //= true
+    {
+      emerTurnOff = false;
       CYCLE = 10;
       Serial.println("may bom da tat");
       pumpStatus = false;
       turnOffPump(); // tắt máy bơm
       if(status == 3) status = 0; // tắt tưới ngay
-      
     }
-    else// chưa tưới xong
-    {
-      delay(50);
-      return;
-    }
+    
   }
   
 

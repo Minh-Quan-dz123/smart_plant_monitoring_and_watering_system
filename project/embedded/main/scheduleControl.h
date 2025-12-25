@@ -40,7 +40,7 @@ void saveSchedules();
 // hàm hỗ trợ khác
 bool isLeapYear(uint16_t year) ;
 int8_t getDaysInMonth(uint16_t year, uint8_t month) ;
-void printSchedules(const Schedule &s);
+void printSchedules();
 
 
 #endif
