@@ -97,8 +97,7 @@ export class MqttService implements OnModuleInit {
     this.client.on('message', async (topic, message) => {
       try {
         const messageStr = message.toString();
-        
-        // Log tất cả messages để dễ test và debug
+
         this.logger.log(` [MQTT] Nhận message từ topic [${topic}]: ${messageStr}`);
 
         // 1. conditions/esp_id/{temp, humi, soil} - ESP → Server
