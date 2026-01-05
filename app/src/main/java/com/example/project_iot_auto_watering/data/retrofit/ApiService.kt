@@ -108,7 +108,7 @@ interface ApiService {
 
 
 object RetrofitInstance {
-    private const val BASE_URL_SERVER = "http://10.0.2.2:3000"
+    private const val BASE_URL_SERVER = "https://backend-iot-u4ls.onrender.com"
     private const val URL_WIFI="http://192.168.4.1"
 
     val api: ApiService by lazy {

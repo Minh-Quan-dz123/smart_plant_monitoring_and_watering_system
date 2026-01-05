@@ -39,6 +39,8 @@
         android:maxLines="1"
         android:paddingHorizontal="10dp"
         android:paddingVertical="12dp"
+        android:textColor="@color/input_text_color"
+        android:textColorHint="@color/input_text_color"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/img_bgr"
         app:layout_constraintEnd_toEndOf="parent"

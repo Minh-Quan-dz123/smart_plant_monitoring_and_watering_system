@@ -11,8 +11,8 @@
         android:id="@+id/roundedImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
         android:background="@drawable/bgr_auth"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -50,6 +50,8 @@
             android:hint="@string/email"
             android:inputType="textEmailAddress"
             android:paddingStart="20dp"
+            android:textColor="@color/input_text_color"
+            android:textColorHint="@color/input_hint_color"
             android:textSize="22sp"
             tools:ignore="RtlSymmetry" />
 
@@ -64,6 +66,8 @@
             android:hint="@string/password"
             android:inputType="textPassword"
             android:paddingStart="20dp"
+            android:textColor="@color/input_text_color"
+            android:textColorHint="@color/input_hint_color"
             android:textSize="22sp"
             tools:ignore="RtlSymmetry" />
 

@@ -24,8 +24,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -90,6 +92,7 @@ class FragmentSensor : Fragment(), View.OnClickListener {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -234,16 +237,33 @@ class FragmentSensor : Fragment(), View.OnClickListener {
         }
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun scanWifi() {
+
         binding.progressBar.visibility= View.VISIBLE
-        val wifiManager = requireContext().getSystemService(WifiManager::class.java)
 
+        val wifiManager =
+            requireContext().applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as WifiManager
+
+        val cachedResults = wifiManager.scanResults
+        if (cachedResults.isNotEmpty()) {
+            processResults(cachedResults)
+            binding.progressBar.visibility = View.GONE
+            return
+        }
         wifiReceiver = object : BroadcastReceiver() {
+            @RequiresApi(Build.VERSION_CODES.TIRAMISU)
             override fun onReceive(context: Context?, intent: Intent?) {
-                val results = wifiManager.scanResults
+                val results = if (ActivityCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return
+                } else {
+                    wifiManager.scanResults
+                }
                 processResults(results)
-
                 // UNREGISTER NGAY SAU KHI NHẬN
                 requireActivity().unregisterReceiver(this)
                 wifiReceiver = null
@@ -256,12 +276,11 @@ class FragmentSensor : Fragment(), View.OnClickListener {
             IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
         )
 
-        wifiManager.startScan()
     }
     private fun ensureWifiAndLocationEnabled() {
         val wifiManager = requireContext().getSystemService(WifiManager::class.java)
         if (wifiManager != null && wifiManager.isWifiEnabled) {
-
+            Toast.makeText(requireContext(),"Đã có bật wifi", Toast.LENGTH_SHORT).show()
         } else {
             startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
         }
@@ -275,7 +294,7 @@ class FragmentSensor : Fragment(), View.OnClickListener {
 
         // Lấy danh sách SSID hợp lệ
         val wifiEsp = rs
-            .map { it.wifiSsid.toString() }
+            .map { it.SSID }
             .filter { it.isNotEmpty() }
             .distinct()
 
