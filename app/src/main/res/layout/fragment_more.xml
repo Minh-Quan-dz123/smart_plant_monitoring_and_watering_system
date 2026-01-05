@@ -35,6 +35,7 @@
         app:layout_constraintVertical_bias="0.398" />
 
     <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_compat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="false"
@@ -52,5 +53,16 @@
         app:layout_constraintTop_toTopOf="@+id/tv_noti"
         app:thumbTint="@color/switch_thumb_tint"
         app:trackTint="@color/switch_track_tint" />
+    <TextView
+        android:text="ON"
+        android:textSize="20sp"
+        app:layout_constraintHorizontal_bias="0.3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/btn_logout"
+        app:layout_constraintTop_toTopOf="@+id/switch_compat"
+        app:layout_constraintBottom_toBottomOf="@+id/switch_compat"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

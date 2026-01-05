@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide
 import com.example.project_iot_auto_watering.MainViewModel
 import com.example.project_iot_auto_watering.MainViewModelFactory
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -49,6 +50,7 @@ import com.example.project_iot_auto_watering.util.NavOption
 import com.example.project_iot_auto_watering.util.ObjectUtils
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.Locale
 
 class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
     private var _binding: FragmentDetailCropBinding? = null
@@ -368,6 +370,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun initObserve() {
         gardenViewModel.listEspDevice.observe(viewLifecycleOwner) { list ->
             var espDevice = DataEspAll("-1", 0.0f, 0.0f, 0.0f, "", false, GardenInfo(-1, ""))
@@ -421,7 +424,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
 
     private fun startIrrigation(gardenId:Int){
         binding.progressBar.visibility=View.VISIBLE
-        Toast.makeText(requireContext(),"Vui lòng đợi máy bơm bật nhé :))", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(),"Vui lòng đợi máy bơm bật ", Toast.LENGTH_SHORT).show()
         binding.img1.setOnClickListener(null)
         gardenViewModel.startIrrigation(
             gardenId,
@@ -460,6 +463,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         if(totalSecond>3600){
 
             val timer=object: CountDownTimer(totalMillis,1000){
+                @SuppressLint("SetTextI18n")
                 override fun onFinish() {
                     tvCountDown.text="00:00"
                 }
@@ -469,13 +473,14 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                     val minutes=(millisUntilFinished/1000%3600)/60
                     val seconds=millisUntilFinished/1000%60
 
-                    tvCountDown.text= String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                    tvCountDown.text= String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, seconds)
                 }
             }
             timer.start()
         }
         else{
             val timer=object: CountDownTimer(totalMillis,1000){
+                @SuppressLint("SetTextI18n")
                 override fun onFinish() {
                     tvCountDown.text="00:00"
                 }
@@ -483,7 +488,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                     val minutes=millisUntilFinished/1000/60
                     val seconds=millisUntilFinished/1000%60
 
-                    tvCountDown.text= String.format("%02d:%02d", minutes, seconds)
+                    tvCountDown.text= String.format(Locale.getDefault(),"%02d:%02d", minutes, seconds)
                 }
             }
             timer.start()

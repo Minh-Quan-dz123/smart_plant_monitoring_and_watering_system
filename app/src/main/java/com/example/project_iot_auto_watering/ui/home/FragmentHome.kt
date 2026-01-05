@@ -1,6 +1,7 @@
 package com.example.project_iot_auto_watering.ui.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -87,6 +88,8 @@ class FragmentHome : Fragment(), View.OnClickListener,
             }
         })
 
+
+        binding.tvName.text=requireContext().getSharedPreferences("name_user", Context.MODE_PRIVATE).getString("name","")
 
         //initViewModel
         initViewModel()

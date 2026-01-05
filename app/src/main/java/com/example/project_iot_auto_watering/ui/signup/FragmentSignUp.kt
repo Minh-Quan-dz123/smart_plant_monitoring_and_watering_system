@@ -1,11 +1,13 @@
 package com.example.project_iot_auto_watering.ui.signup
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -74,6 +76,10 @@ class FragmentSignUp : Fragment(), View.OnClickListener {
                     1 -> {
                         viewModelAuth.register(username,email,password) {message->
                             if(message=="success"){
+                                val pref=requireContext().getSharedPreferences("name_user", Context.MODE_PRIVATE)
+                                pref.edit {
+                                    putString("name",username)
+                                }
                                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                                 viewModelAuth.getAccountFromRegister(email,password)
                                 Log.d("datasignup","${viewModelAuth.emailLogin},${viewModelAuth.passwordLogin}")

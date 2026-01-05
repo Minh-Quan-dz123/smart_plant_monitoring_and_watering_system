@@ -20,6 +20,7 @@ import com.example.project_iot_auto_watering.ui.login.viewmodel.AuthViewModel
 import com.example.project_iot_auto_watering.ui.login.viewmodel.AuthViewModelFactory
 import com.example.project_iot_auto_watering.util.NavOption
 import com.example.project_iot_auto_watering.util.checkAccount
+import com.example.project_iot_auto_watering.util.saveEmailPassword
 import com.example.project_iot_auto_watering.util.setStateOpenedApp
 
 class FragmentLogin : Fragment(), View.OnClickListener {
@@ -27,13 +28,14 @@ class FragmentLogin : Fragment(), View.OnClickListener {
     private val binding get() = _binding!!
     private lateinit var viewModelAuth: AuthViewModel
     private val authRepository = AuthRepository(RetrofitInstance.api)
-    private lateinit var pref: SharedPreferences
+    private lateinit var prefToken: SharedPreferences
+    private lateinit var prefAccount: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -45,7 +47,10 @@ class FragmentLogin : Fragment(), View.OnClickListener {
         setStateOpenedApp(requireContext(), true)
 
         //lấy token từ file SharedPreferences
-        pref = requireContext().getSharedPreferences("Auth", Context.MODE_PRIVATE)
+        prefToken = requireContext().getSharedPreferences("Auth", Context.MODE_PRIVATE)
+        prefAccount = requireContext().getSharedPreferences("account", Context.MODE_PRIVATE)
+        binding.eMail.setText(prefAccount.getString("username", ""))
+        binding.passWord.setText(prefAccount.getString("password", ""))
 
         viewModelAuth =
             ViewModelProvider(
@@ -80,7 +85,8 @@ class FragmentLogin : Fragment(), View.OnClickListener {
                                 "Đăng nhập thành công!",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            pref.edit { putString("token", viewModelAuth.tokenAuth) }
+                            saveEmailPassword(requireContext(), email, password)
+                            prefToken.edit { putString("token", viewModelAuth.tokenAuth) }
                             findNavController().navigate(R.id.action_fragmentLogin_to_fragmentHome)
                         } else {
                             Toast.makeText(
@@ -118,7 +124,7 @@ class FragmentLogin : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun initObserve(){
+    private fun initObserve() {
         viewModelAuth.emailLogin.observe(viewLifecycleOwner) { email ->
             binding.eMail.setText(email)
         }
