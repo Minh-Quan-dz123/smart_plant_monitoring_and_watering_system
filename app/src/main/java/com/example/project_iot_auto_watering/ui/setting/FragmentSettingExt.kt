@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 
 fun checkInputValid(d:String,t:String,repeat:String,duration:Int,callBack:(Boolean,String)-> Unit){
     Log.d("DEBUG_CHECKInPUT","$d-$t-$repeat-$duration")
-    if(d=="" || t=="" || repeat=="" ||duration<1){
+    if(d=="" || t=="" || repeat=="" ||duration<1 ||duration.toString()==""){
         callBack(false,"Vui lòng nhập đầy đủ thông tin tưới")
         return
     }

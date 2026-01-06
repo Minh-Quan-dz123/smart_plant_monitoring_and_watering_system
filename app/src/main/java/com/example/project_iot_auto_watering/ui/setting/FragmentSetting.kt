@@ -107,9 +107,10 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
     private fun initObserve() {
         scheduleViewModel.listSchedule.observe(viewLifecycleOwner) { list ->
             if(list.isNotEmpty()){
+                Log.d("DEBUG",list.toString())
                 periodOfTimeFromNow(list[0].date,list[0].time)
-                adapterSchedule.submitList(list)
             }
+            adapterSchedule.submitList(list)
         }
     }
 
@@ -222,15 +223,22 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
     private fun setupDate() {
         val calendar = Calendar.getInstance()
         datePicker = DatePickerDialog(
-            requireContext(), { _, year, month, dayOfMonth ->
-                val date = "$year-${month + 1}-$dayOfMonth"
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val date = String.format(
+                    Locale.getDefault(),
+                    "%04d-%02d-%02d",
+                    year,
+                    month + 1,
+                    dayOfMonth
+                )
                 binding.tvDate.text = date
-            }, calendar.get(Calendar.YEAR),
+            },
+            calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
     }
-
 
     @SuppressLint("SetTextI18n")
     private fun setupPopupDuration() {
@@ -349,6 +357,7 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
     }
 
     private fun addSchedule(body: ScheduleBody) {
+        Log.d("DEBUG_addSchedule",body.toString())
         scheduleViewModel.createSchedule(idGarden, body, tokenAuth.toString()) { m ->
             if (m == "success") {
                 refreshData()
@@ -361,6 +370,7 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
         dateFromSchedule = binding.tvDate.text.toString()
         timeFromSchedule = binding.tvTime.text.toString()
         val valueRepeatTmp = binding.tvRepeat.text.toString()
+        Log.d("DEBUG_GET_DATA",valueRepeatTmp)
         when (valueRepeatTmp) {
             "Không" -> repeatFromSchedule = "once"
             "Hàng ngày" -> repeatFromSchedule = "daily"
@@ -374,18 +384,24 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
         }
 
         val unitDuration = binding.unit.text.toString()
-        when (unitDuration) {
-            "giờ" -> {
-                durationFromSchedule = binding.tvDuration.text.toString().toInt() * 3600
-            }
+        if(binding.tvDuration.text.toString()!=""){
+            when (unitDuration) {
+                "giờ" -> {
+                    durationFromSchedule = binding.tvDuration.text.toString().toInt() * 3600
+                }
 
-            "phút" -> {
-                durationFromSchedule = binding.tvDuration.text.toString().toInt() * 60
-            }
+                "phút" -> {
+                    durationFromSchedule = binding.tvDuration.text.toString().toInt() * 60
+                }
 
-            "giây" -> {
-                durationFromSchedule = binding.tvDuration.text.toString().toInt()
+                "giây" -> {
+                    durationFromSchedule = binding.tvDuration.text.toString().toInt()
+                }
             }
+        }
+        else{
+            Toast.makeText(requireContext(),"Vui lòng nhập thời gian >1", Toast.LENGTH_SHORT).show()
+            return
         }
     }
 
