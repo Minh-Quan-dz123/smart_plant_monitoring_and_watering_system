@@ -1,63 +1,55 @@
 // auth.js
 
-// Chờ cho trang HTML được tải xong
 document.addEventListener("DOMContentLoaded", () => {
 
-  // Lấy các phần tử từ trang HTML
   const loginForm = document.getElementById("loginForm");
+  // Lưu ý: ID trong HTML vẫn là "username", nhưng ta coi nó là ô nhập Email
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   const errorMessage = document.getElementById("error-message");
 
-  // Gắn một hàm xử lý sự kiện khi form được "submit" (nhấn nút Đăng nhập)
   loginForm.addEventListener("submit", async (event) => {
     
-    // Ngăn trang web tải lại (hành vi mặc định của form)
     event.preventDefault(); 
-
-    // Xóa thông báo lỗi cũ
     errorMessage.textContent = "";
 
-    // Lấy giá trị người dùng nhập vào
-    const username = usernameInput.value;
+    // --- SỬA LỖI TẠI ĐÂY (QUAN TRỌNG) ---
+    // Bạn phải khai báo biến tên là "email" để dùng được ở bên dưới
+    const email = usernameInput.value; 
     const password = passwordInput.value;
 
-    // Gửi yêu cầu đến backend (giống API trong ảnh bạn gửi)
     try {
       const response = await fetch("http://localhost:3000/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // Gửi username/password đi
-        // LƯU Ý: Đảm bảo key (ví dụ: 'username') khớp với
-        // yêu cầu của backend
+        // Gửi dữ liệu đi với key là "email"
         body: JSON.stringify({ 
-          username: username, // hoặc email: username, tùy vào backend
+          email: email,      // Biến 'email' đã được khai báo ở trên
           password: password 
         }), 
       });
 
-      const data = await response.json();
-
+      // Kiểm tra phản hồi từ Server
       if (response.ok) {
-        // Đăng nhập THÀNH CÔNG
-        // Nếu backend trả về token, hãy lưu nó lại
-        if (data.token) {
-          localStorage.setItem("userToken", data.token);
+        const data = await response.json();
+        
+        // Lưu token (nếu backend trả về access_token)
+        if (data.access_token || data.token) {
+           localStorage.setItem("userToken", data.access_token || data.token);
         }
         
-        // Chuyển hướng đến trang main.html
-        window.location.href = "main.html";
-
-      } else {
-        // Đăng nhập THẤT BẠI
-        // Hiển thị lỗi trả về từ server
-        errorMessage.textContent = data.message || "Tên đăng nhập hoặc mật khẩu không đúng.";
+        alert("Đăng nhập thành công!");
+        window.location.href = "main.html"; // Chuyển hướng
+        return;
       }
 
+      // Nếu thất bại
+      const errorData = await response.json();
+      errorMessage.textContent = errorData.message || "Email hoặc mật khẩu không đúng.";
+
     } catch (error) {
-      // Lỗi (ví dụ: không kết nối được backend)
       console.error("Lỗi đăng nhập:", error);
       errorMessage.textContent = "Không thể kết nối đến máy chủ. Vui lòng thử lại.";
     }

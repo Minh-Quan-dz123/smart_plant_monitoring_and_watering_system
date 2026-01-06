@@ -1,266 +1,193 @@
+/* style.css */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+}
+
+/* 1. LAYOUT CHÍNH  */
 body {
-  font-family: 'Arial', sans-serif;
-  padding: 50px;
-  background: #f0f4f8;
-  border-radius: 8px;
-  margin: 0;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f0f2f5;
+    height: 100vh;
+    overflow: hidden; 
 }
 
-.page {
-  text-align: center;
-  padding: 40px;
-  margin: 5px 10px;
-  max-width: 350px;
-  background: #d3e6f1;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
 .container {
-  display: flex;
-  justify-content: space-between;
-  padding: 40px;
-  gap: 2px;
-  max-width: 1200px;
-  margin: 15px 10px;
-  flex-wrap: wrap;
+    display: flex;       
+    flex-direction: row; 
+    width: 100%;        
+    height: 100%;      
+    overflow: hidden;
 }
 
-.left, .right {
-  border-radius: 12px;
-  background-color: #d3e6f1;
-  display: flex;
-  flex-direction: column;
-}
 
 .left {
-  flex: 1;
-  padding: 20px;
-  border-right: 1px solid #c8c6c6;
+    width: 280px;       
+    min-width: 280px;
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05); 
+    display: flex;
+    flex-direction: column;
+    gap: 15px;          
+    overflow-y: auto;
+    z-index: 10;
+    height: 100vh;
 }
 
+.left h1 {
+    color: #45b9c6;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 800;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    margin-bottom: 5px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 5px solid transparent;
+    color: #555;
+    font-weight: 600;
+}
+
+.info-box:hover {
+    background: #e0f7fa;
+    border-left: 5px solid #45b9c6;
+    color: #00838f;
+    transform: translateX(5px);
+}
+
+
+.selected-garden {
+    background-color: #e0f7fa !important;
+    border-left: 5px solid #00bcd4 !important;
+    color: #006064 !important;
+    font-weight: bold;
+}
+
+/* 3. CỘT PHẢI (NỘI DUNG) */
 .right {
-  flex: 3;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    flex: 1;
+    min-width: 0; 
+    padding: 30px;
+    background-color: #f4f6f8;
+    overflow-y: auto;
+    height: 100vh;
+    position: relative;
 }
 
-.left h1, .right h1 {
-  background-color: #f4f6f8;
-  text-align: center;
-  padding: 14px;
-  font-size: 24px;
-  color: #333;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  margin-top: 10px;
+.right h1 {
+    margin-top: 0;
+    color: #34495e;
+    font-size: 28px;
+    margin-bottom: 25px;
 }
 
-
-.left strong, .right strong {
-  font-weight: bold;
-  color: #000;
-  background-color: #ffffff;
-  border-radius: 5px;
+/* --- NÚT ĐĂNG XUẤT (GÓC PHẢI) --- */
+.logout-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background-color: #ff7675;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3);
+    font-weight: bold;
+    z-index: 100;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.left strong {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  font-size: 14px;
+.logout-btn:hover {
+    background-color: #d63031;
+    transform: translateX(2px);
 }
 
-.right strong {
-  padding: 20px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-}
-
-input[type="text"], input[type="password"], input[type="submit"] {
-  width: 100%;
-  padding: 10px;
-  margin: 8px -10px;
-  background: #f4f6f8;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  transition: border-color 0.3s ease;
-  font-size: 12px;
-}
-
-input[type="text"]:focus, input[type="password"]:focus {
-  border-color: #45b9c6;
-  outline: none;
-}
-
-button {
-  margin: 10px 0;
-  padding: 12px 16px;
-  background-color: #52cedc;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-
-.modal {
-  display: none; /* Modal mặc định ẩn */
-  position: fixed;  
-  z-index: 999;     /* Đảm bảo modal luôn nằm trên cùng */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);  /* Màu nền mờ */
-}
-
-.modal-content {
-  position: absolute; 
-  top: 50%;
-  left: 50%;  
-  transform: translate(-50%, -50%); /* Điều chỉnh để modal chính xác ở giữa */
-  background-color: #fff;
-  padding: 20px;
-  width: 350px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  margin-right: 40px;
-  z-index: 1000;
-
-}
-
- 
-/* Thông tin cây và các checkbox */
-.info-box, .sensor-grid p, .checkbox-group label {
-  background-color: #ffffff;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-/* Popup hiển thị giữa màn hình */
-.centered-box {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #ffffff;
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  width: 350px;
-  text-align: center;
-
-}
-
-/* Dấu X để đóng popup */
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  cursor: pointer;
-}
-.sensor-grid {
-  margin-top: 15px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Tạo 2 cột với độ rộng bằng nhau */
-  gap: 15px; /* Khoảng cách giữa các ô */
-  grid-template-rows: repeat(auto-fill, 1fr); /* Tự động tính toán số hàng */
-  width: 100%; /* Đảm bảo grid chiếm toàn bộ chiều rộng */
-}
-
-.sensor-grid > div {
-  background-color: #f2f2f2;
-  display: flex;
-  /*quân thêm*/
-  flex-direction: column;  
-  justify-content: center;
-  align-items: center;
-  height: 100%; /* Đảm bảo chiều cao của các ô bằng nhau */
-  border-radius: 8px;
-}
-
-
-.checkbox-group {
-  grid-column: span 2;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.checkbox-group input[type="checkbox"]:checked + label {
-  background-color: #ffffff;
-  padding: 5px;
-}
-
-
-.tooltip-container {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-
-.tooltip-icon {
-  background-color: #000;
-  color: #fff;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  bottom: 10px;
-  left: 5px;
-
-}
-
-.tooltip-text {
-  display: none;
-  position: absolute;
-  top: 22px;
-  left: 0;
-  background-color: #333;
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  width: 200px;
-  z-index: 100;
-  white-space: normal;
-}
-
-.tooltip-container:hover .tooltip-text {
-  display: block;
-}
-
-
-
+/* --- ĐỒNG HỒ  --- */
 #timeDisplay {
-  position: fixed;
-  margin-top: 30px;
-  margin-right: 80px;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #89d6e8;
-  padding: 8px 16px;
-  border-radius: 8px;
-  z-index: 1000;
+    position: absolute;
+    top: 30px;
+    right: 160px; 
+    background: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-weight: bold;
+    color: #45b9c6;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 50;
+    border: 1px solid #eee;
 }
+
+
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    text-align: center;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 160px;
+}
+.card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+.card-icon { font-size: 32px; margin-bottom: 10px; }
+.card-title { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+.card-value { font-size: 28px; font-weight: bold; color: #2c3e50; }
+.val-temp { color: #e74c3c; } .val-humi { color: #3498db; } .val-soil { color: #27ae60; } .val-water { color: #f39c12; }
+
+/* Bơm */
+.pump-card { grid-column: span 2; flex-direction: row; justify-content: space-between; padding: 25px 40px; }
+@media (max-width: 900px) { .pump-card { grid-column: span 1; flex-direction: column; } }
+
+/* BUTTONS & INPUTS CHUNG */
+button { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+#An_button { padding: 12px 30px; font-size: 16px; color: white; border-radius: 50px; }
+input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+/* MODAL */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+.modal-content, .centered-box { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; position: relative; animation: zoomIn 0.3s; }
+.close-button { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #aaa; }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* CSS LOGIN/REGISTER */
+body.auth-page { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.page { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
+.page h2 { color: #45b9c6; margin-bottom: 20px; }
+.page input { margin-bottom: 15px; background: #fafafa; }
+.page button[type="submit"] { background: linear-gradient(135deg, #45b9c6, #27ae60); color: white; width: 100%; margin-top: 10px; }
+
+/* CSS TỪ ĐIỂN */
+.suggestions-list { list-style: none; padding: 0; margin: 5px 0 0; position: absolute; width: 100%; background: white; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 1000; display: none; max-height: 200px; overflow-y: auto; }
+.suggestions-list li { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; text-align: left; }
+.suggestions-list li:hover { background: #e0f7fa; }
+.plant-detail-card { background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #27ae60; margin-top: 15px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+/* Mode Control */
+.mode-control { background: white; padding: 20px; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px; }

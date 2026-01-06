@@ -1,186 +1,238 @@
-<!-- main.html-->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HOME</title>
+  <title>Smart Garden Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <!--Bên trái-->
+    
     <div class="left">
       <h1>HOME</h1>
-      <div class="info-box" onclick="MoModalCay()">
-        <strong>🌱 Danh sách cây</strong>
-      </div>
-      <!-- Thêm cây -->
-      <div id="QuanLyCay" class="modal">
-        <div class="centered-box">
-        <span class="close-button" onclick="DongModalCay()">x</span>   
-        <div id="ThemCay">
-          <h2>Tên cây</h2>
-          <input type="text" id="ThemTenCay" placeholder="Nhập tên cây">
-          <button onclick="LuuTenCay()">Lưu</button>
-          <button onclick="HuyThemCay()">Đóng</button>
-        </div>
-        <ul id="DanhSachCay"></ul>
-        <!-- Sửa cây -->
-        <div id="EditChonCay">
-          <p id="ChonTenCay"></p>
-          <button onclick="XoaCayDaChon()">Xoá</button>
-          <button onclick="HuyThemCay()">Đóng</button>
-        </div>
-      </div>
+      
+      <div class="info-box" onclick="MoModalVuon()">
+        <strong>🏡 Vườn của tôi</strong>
       </div>
       
-      
-      
-      <!-- Ô Chu kỳ tưới cây -->
       <div class="info-box" onclick="MoChuKy()">
-        <strong>🔁 thời gian tưới cây</strong>
+        <strong>🔁 Thời gian tưới cây</strong>
         <div id="DanhsachChuKy"></div>
       </div>
-      <!--  nhập chu kỳ --> 
+
+      <div class="info-box" onclick="openAdminPlantModal()">
+        <strong>🛠️ Thư viện cây </strong>
+      </div>
+      
+      <div class="info-box" onclick="openLichTuoiOptions()">
+        <strong>📅 Lịch tưới cây</strong>
+      </div>
+
+      <div class="info-box" onclick="openDictionaryModal()">
+        <strong>📖 Từ điển tưới cây</strong>
+      </div>
+
+      <div id="QuanLyVuon" class="modal">
+        <div class="centered-box">
+          <span class="close-button" onclick="DongModalVuon()">x</span>   
+          <div id="ThemVuon">
+            <h2>Thêm Vườn Mới</h2>
+            <label>1. Tên vườn:</label>
+            <input type="text" id="TenVuonInput" placeholder="VD: Vườn ban công">
+            <label>2. Chọn loại cây:</label>
+            <select id="ChonLoaiCay"><option value="">-- Đang tải... --</option></select>
+            <label>3. Mã thiết bị (ESP ID):</label>
+            <input type="text" id="EspIdInput" placeholder="Nhập mã thiết bị">
+            <button onclick="LuuVuonMoi()">Lưu Vườn</button>
+            <button onclick="DongModalVuon()" style="background-color: #aaa;">Đóng</button>
+          </div>
+          <hr style="margin: 20px 0;">
+          <h3>Danh sách vườn của bạn</h3>
+          <ul id="DanhSachVuonUI"></ul>
+          <div id="EditChonVuon" style="display: none; border-top: 1px solid #eee; padding-top: 10px;">
+            <p id="TenVuonDangChon" style="font-weight: bold; color: #45b9c6;"></p>
+            <button onclick="XoaVuonDaChon()" style="background-color: #e74c3c;">🗑️ Xoá Vườn Này</button>
+            <button onclick="DongEditVuon()" style="background-color: #aaa;">Hủy</button>
+          </div>
+        </div>
+      </div>
+
       <div id="ModalChuky" class="modal">
         <div class="modal-content">
           <span class="close-button" onclick="DongModal()">x</span>   
-
           <h2>Thời gian mỗi lần tưới</h2>
-          <input type="text" id="InputChuky" placeholder="Nhập thời gian">
+          <input type="text" id="InputChuky" placeholder="Nhập thời gian (giây)">
           <button onclick="LuuChuKy()">Lưu</button>
           <button onclick="DongChuKy()">Đóng</button>
         </div>
       </div>
 
-
-
-        
-      <!-- Ô lịch tưới cây chỉ hiện khi nhấn vào -->
-      <div class="info-box" onclick="openLichTuoiOptions()">
-        <strong>📅 Lịch tưới cây</strong>
-      </div>
-
-      <!-- Modal Hiển thị các tùy chọn Lịch tưới cây -->
       <div id="LichTuoiOptionsModal" class="modal">
         <div class="modal-content">
-          <h2></h2>
+          <h2>Quản lý Lịch Tưới</h2>
           <button onclick="openAddLichTuoiModal()">Thêm lịch tưới cây</button>
           <button onclick="openLichTuoiListModal()">Danh sách lịch tưới cây</button>
           <button onclick="dongLichTuoiOptionsModal()">Đóng</button>
         </div>
       </div>
 
-      <!-- Modal Thêm lịch tưới cây -->
-      <div id="timeDisplay"></div>
-      
       <div id="LichTuoiModal" class="modal">
         <div class="modal-content">
-          <h2>Chọn lịch tưới cây</h2>
+          <h2>Tạo Lịch Tưới Mới</h2>
           <form id="LichTuoiForm">
+            <label>Giờ tưới:</label>
             <input type="time" id="wateringTime" required>
-            <input type="number" id="wateringSecond" min="0" max="59" placeholder="Giây" required><br><br>
-            <label><input type="radio" name="day" value="Mon" required> Thứ 2</label>
-            <label><input type="radio" name="day" value="Tue"> Thứ 3</label>
-            <label><input type="radio" name="day" value="Wed"> Thứ 4</label>
-            <label><input type="radio" name="day" value="Thu"> Thứ 5</label>
-            <label><input type="radio" name="day" value="Fri"> Thứ 6</label>
-            <label><input type="radio" name="day" value="Sat"> Thứ 7</label>
-            <label><input type="radio" name="day" value="Sun"> Chủ nhật</label><br><br>
-            <button >Lưu</button>
-            <button onclick="cancelLichTuoi()">Đóng</button>
+            <label>Thời lượng (giây):</label>
+            <input type="number" id="wateringSecond" min="1" max="3600" placeholder="VD: 60" required><br><br>
+            <div style="text-align: left; display: grid; grid-template-columns: 1fr 1fr;">
+                <label><input type="radio" name="day" value="Mon" required> Thứ 2</label>
+                <label><input type="radio" name="day" value="Tue"> Thứ 3</label>
+                <label><input type="radio" name="day" value="Wed"> Thứ 4</label>
+                <label><input type="radio" name="day" value="Thu"> Thứ 5</label>
+                <label><input type="radio" name="day" value="Fri"> Thứ 6</label>
+                <label><input type="radio" name="day" value="Sat"> Thứ 7</label>
+                <label><input type="radio" name="day" value="Sun"> Chủ nhật</label>
+            </div>
+            <br>
+            <button type="submit">Lưu Lịch</button>
+            <button type="button" onclick="cancelLichTuoi()" style="background-color: #aaa;">Hủy</button>
           </form>
         </div>
       </div>
 
-      <!-- Modal Danh sách lịch tưới cây -->
       <div id="LichTuoiListModal" class="modal">
         <div class="modal-content">
-          <h2>Danh sách lịch tưới cây</h2>
-          <div id="scheduleList"></div> <!-- Đây là nơi danh sách lịch sẽ được hiển thị -->
-
-          <!-- Nút Xoá tất cả -->
-          <button onclick="xoaTatCaLichTuoi()">🗑️ Xoá tất cả</button>
-
-          <button onclick="dongLichTuoiListModal()">Đóng</button>
+          <h2>Danh sách lịch tưới</h2>
+          <div id="scheduleList" style="max-height: 300px; overflow-y: auto;"></div>
+          <hr>
+          <button onclick="xoaTatCaLichTuoi()" style="background-color: #e74c3c;">🗑️ Xoá tất cả</button>
+          <button onclick="dongLichTuoiListModal()" style="background-color: #aaa;">Đóng</button>
         </div>
       </div>
 
-
-
-
-
-  <!-- Từ điển tưới cây -->
-      <div class="info-box" onclick="openthuvienModal()"> <!--openDictionaryModal()-->
-        <strong>📖 Từ điển tưới cây</strong>
-      </div>
-
-      <!-- Modal từ điển tưới cây -->
-      <div id="thuvienModal" class="modal"> <!--dictionaryModal-->
-        <div class="modal-content">
-          <h2>Tìm tên cây</h2>
-          <input type="text" id="plantSearch" placeholder="Nhập tên cây..." autocomplete="off">
-          <ul id="suggestions"></ul>
-          <div id="plantInfo" style="margin-top: 10px;"></div>
-          <button onclick="dongthuvienModal()">Đóng</button> <!--closeDictionaryModal()-->
+      <div id="DictionaryModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+          <span class="close-button" onclick="closeDictionaryModal()">x</span>
+          <h2 style="color: #45b9c6; text-align: center;">📖 Từ Điển Cây Trồng</h2>
+          <div class="search-container" style="position: relative; margin-bottom: 20px;">
+              <div style="display: flex; gap: 10px;">
+                  <input type="text" id="plantSearch" placeholder="🔍 Nhập tên cây..." autocomplete="off">
+                  <button onclick="handleSearchButton()" style="width: auto; background-color: #45b9c6; color: white; border-radius: 8px;">Tìm</button>
+              </div>
+              <ul id="suggestions" class="suggestions-list"></ul>
+          </div>
+          <div id="plantInfo" class="plant-detail-card" style="display: none;"></div>
+          <button onclick="closeDictionaryModal()" style="background-color: #95a5a6; width: 100%; margin-top: 15px;">Đóng</button>
         </div>
       </div>
-    </div>
 
-
-    <!--Bên phải-->
-    <div class="right">
-        <h1>Remote Water Control</h1>
-        <div class="sensor-grid">
-          <strong>
-            PUMP: <span id="status_bom"></span>
-            <button id="An_button" onclick="Bat_May_Bom()">BẬT</button>
+      <div id="AdminPlantModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+          <span class="close-button" onclick="closeAdminPlantModal()">x</span>
+          <h2 style="color: #27ae60; text-align: center;">🛠️ Thêm Giống Cây Mới</h2>
+          <div style="text-align: left;">
+            <label>Tên cây:</label>
+            <input type="text" id="adminPlantName" placeholder="VD: Hoa Hồng">
+            <label>Mô tả:</label>
+            <textarea id="adminPlantDesc" rows="2" placeholder="Mô tả..."></textarea>
             
-          </strong>
-          <strong>🌡️Nhiệt độ:<span id="tempValue"> --°C</span></strong>
-          <strong>💦 Độ ẩm: <span id="humidityValue">--%</span></strong>
-          <strong style="display: inline-flex; align-items: center;" onclick="openDoChiuKhatModal()">
-            Độ chịu khát: <span id="waterValue">--đ</span>
-            <span class="tooltip-container" style="margin-left: 6px;" onclick="event.stopPropagation()">
-              <span class="tooltip-icon">?</span>
-              <span class="tooltip-text">
-                  Chu kì khát: Là chỉ số thể hiện khả năng chịu khát của cây trong 
-                  bao lâu trong ĐIỀU KIỆN THUẬN LỢI. Nó ảnh hưởng bởi các yếu tố như dung tích chứa 
-                  nước trong cây, khả năng thoát hơi nước, nhiệt độ, độ ẩm không khí, độ ẩm đất,... Các
-                  cây khác nhau có chu kì khát khác nhau.
-                <br><br>Ví dụ: Cây dâu tây có độ chịu khát là 4 ngày. Nghĩa là vào mùa 
-                  đông, cây này cần tưới nước 1 lần sau 4 ngày. Vào mùa xuân, hè là 1 lần sau 2-3 ngày, 
-                  mùa thu là 3 ngày.
-                <br><br>Chỉ số chu kì khát của hệ thống chúng tôi sẽ tự động thay đổi linh hoạt giúp người 
-                  dùng không cần thay đổi nó thường xuyên, nhất là vào những thời điểm có thời tiết biến 
-                  đổi thất thường. ví dụ bạn để là 4 ngày, thì đến mùa hè cứ sau 2 ngày là hệ thống tự tưới cây
-                  mà bạn không cần phải đặt lại 2 ngày
-              </span>
-            </span>
-          </strong>
+            <label>Môi trường lý tưởng:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="minTemp" placeholder="Min Temp">
+                <input type="number" id="maxTemp" placeholder="Max Temp">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="minAir" placeholder="Min Air %">
+                <input type="number" id="maxAir" placeholder="Max Air %">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="minSoil" placeholder="Min Soil %">
+                <input type="number" id="maxSoil" placeholder="Max Soil %">
+            </div>
+            <button onclick="LuuCayMoiAdmin()" style="width: 100%; background-color: #27ae60; color: white;">💾 Lưu</button>
+          </div>
+        </div>
+      </div>
+
+    </div> <div class="right">
+        
+        <button onclick="logout()" class="logout-btn">Đăng xuất ➜</button>
+
+        <div id="timeDisplay"></div>
+
+        <h1>Remote Water Control</h1>
+        
+        <div class="sensor-grid">
+            <div class="card pump-card">
+                <div style="text-align: left;">
+                    <div class="card-title">Trạng thái Bơm</div>
+                    <div class="card-value" id="status_bom" style="font-size: 20px;">ĐANG TẢI...</div>
+                </div>
+                <button id="An_button" onclick="TogglePump()">--</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🌡️</div>
+                <div class="card-title">Nhiệt độ KK</div>
+                <div class="card-value val-temp" id="tempValue">--°C</div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💧</div>
+                <div class="card-title">Độ ẩm KK</div>
+                <div class="card-value val-humi" id="humidityValue">--%</div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🌱</div>
+                <div class="card-title">Độ ẩm Đất</div>
+                <div class="card-value val-soil" id="soilValue">--%</div>
+            </div>
+
+            <div class="card" onclick="openDoChiuKhatModal()" style="cursor: pointer;">
+                <div class="card-icon">🐫</div>
+                <div class="card-title">
+                    Độ chịu khát 
+                    <span class="tooltip-container" onclick="event.stopPropagation()">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Ngưỡng độ ẩm đất tối thiểu để kích hoạt bơm tự động.</span>
+                    </span>
+                </div>
+                <div class="card-value val-water" id="waterValue">--đ</div>
+            </div>
         </div>
 
-        <!-- Modal nhập ĐỘ CHỊU KHÁT -->
+        <div class="mode-control">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">⚙️</span>
+                <div style="text-align: left;">
+                    <div style="font-size: 12px; color: #888; font-weight: bold;">CHẾ ĐỘ HIỆN TẠI</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #45b9c6;" id="currentModeDisplay">--</div>
+                </div>
+            </div>
+            <div style="border-left: 1px solid #ddd; height: 40px; margin: 0 20px;"></div>
+            <select id="irrigationModeSelect" onchange="handleModeChange()">
+                <option value="" disabled selected>-- Đổi chế độ --</option>
+                <option value="auto">Tự động (Auto)</option>
+                <option value="manual">Thủ công (Manual)</option>
+                <option value="off">Tắt (Off)</option>
+            </select>
+        </div>
+
         <div id="DoChiuKhatModal" class="modal">
           <div class="modal-content">
-            <h2>Độ Chịu khát</h2>
-            <input type="text" id="DoChiuKhatInput" placeholder="Nhập ĐỘ CHỊU KHÁT >=10 (s)">
-            
-              <button onclick="saveDoChiuKhat()">Lưu</button>
-              <button onclick="DongDoChiuKhat()">Đóng</button>
+            <span class="close-button" onclick="DongDoChiuKhat()">x</span>
+            <h2>Cài đặt Độ chịu khát</h2>
+            <br>
+            <input type="number" id="DoChiuKhatInput" placeholder="Nhập giá trị (VD: 20)">
+            <br><br>
+            <button onclick="saveDoChiuKhat()" style="background-color: #45b9c6; color: white;">Lưu</button>
+            <button onclick="DongDoChiuKhat()" style="background-color: #e74c3c; color: white;">Hủy</button>
           </div>
         </div>
 
-      </div>
-      
-  <div style="text-align: center; margin-top: 20px;">
-    <button onclick="window.location.href='index.html'">Đăng xuất</button>
-
-  </div>
-  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    </div> </div> <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
   <script src="script.js"></script>
-
-
 </body>
-</html> 
+</html>

@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌱 Đăng ký</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌱 Đăng ký</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page">
-    <h2>🌱 Đăng ký</h2>
+<body class="auth-page">
+  <div class="page">
+    <h2>🌱 Đăng ký</h2>
 
-        <form id="registerForm">
-            <input type="text" id="username" placeholder="Tên người dùng" required>
-      <input type="password" id="password" placeholder="Mật khẩu" required>
-      <input type="password" id="password-confirm" placeholder="Nhập lại mật khẩu" required>
+    <form id="registerForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="username" placeholder="Tên người dùng" required>
+      <input type="password" id="password" placeholder="Mật khẩu" required>
+      <input type="password" id="password-confirm" placeholder="Nhập lại mật khẩu" required>
 
       <p id="error-message" style="color: red;"></p>
 
-      <button type="button" onclick="window.location.href='index.html'">Trở lại</button>
-            <button type="submit">Đăng ký</button>
-    </form>
-  </div>
+      <div class="button-group">
+        <button type="button" onclick="window.location.href='index.html'">Trở lại</button>
+        <button type="submit">Đăng ký</button>
+      </div>
+    </form>
+  </div>
 
   <script src="register-handler.js" defer></script>
 </body>
