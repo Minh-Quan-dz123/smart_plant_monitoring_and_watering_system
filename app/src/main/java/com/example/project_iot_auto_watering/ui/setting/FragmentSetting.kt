@@ -367,6 +367,7 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
             "Mỗi thứ 6" -> repeatFromSchedule = "week:4"
             "Mỗi thứ 7" -> repeatFromSchedule = "week:5"
             "Mỗi chủ nhật" -> repeatFromSchedule = "week:6"
+            else -> repeatFromSchedule="once"
         }
 
         val unitDuration = binding.unit.text.toString()
