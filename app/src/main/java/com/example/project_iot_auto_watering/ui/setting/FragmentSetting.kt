@@ -198,21 +198,7 @@ class FragmentSetting : Fragment(), View.OnClickListener, OnClickIcon {
         val now = Calendar.getInstance()
         timePicker = TimePickerDialog(
             requireContext(), { _, hourOfDay, minute ->
-                var time=""
-                if(hourOfDay.toString().length==1 && minute.toString().length==1){
-                    time = "0$hourOfDay:0$minute"
-                }
-                else{
-                    if(hourOfDay.toString().length==1){
-                        time = "0$hourOfDay:$minute"
-                    }
-                    else if(minute.toString().length==1){
-                        time = "$hourOfDay:0$minute"
-                    }
-                    else{
-                        time = "$hourOfDay:$minute"
-                    }
-                }
+                val time=String.format(Locale.getDefault(), format = "%02d:%02d",hourOfDay,minute)
                 binding.tvTime.text = time
             }, now.get(Calendar.HOUR_OF_DAY),
             now.get(Calendar.MINUTE),
