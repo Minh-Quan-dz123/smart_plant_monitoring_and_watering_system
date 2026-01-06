@@ -113,4 +113,4 @@ model IrrigationLog {
   garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
   gardenId  Int
   createdAt DateTime @default(now())
-}"-1", nhưng ESPDevice
+}

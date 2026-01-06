@@ -33,7 +33,7 @@ export class PlantController {
     @ApiBearerAuth()
     @Post()
     @UseGuards(AuthGuard, RolesAuthGuard)
-    @Roles(Role.ADMIN) // admin mới tạo được plant
+    @Roles(Role.ADMIN, Role.USER) // admin mới tạo được plant
     async createPlant(
         @Body() createPlantDto: CreatePlantDto,
         @Req() req,

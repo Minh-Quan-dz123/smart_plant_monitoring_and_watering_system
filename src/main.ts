@@ -8,7 +8,7 @@ async function bootstrap() {
 
   //  Cho phép CORS (để client như React, Angular gọi API)
   app.enableCors({
-    origin: '*', 
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
