@@ -82,10 +82,10 @@ class GardenRepository(private val api: ApiService) {
         val response = api.startIrrigation(gardenId, durationManual, "Bearer $token")
         if (response.isSuccessful) {
             Log.d(
-                "DEBUG",
-                "Error Start Irrigation: hello"
+                "DEBUG__xx",
+                "${response.body()}"
             )
-            return response.body() ?: ReceiveIrrigationManual("", -1)
+            return response.body()?: ReceiveIrrigationManual("",-1,0)
         } else {
             val errorBody = response.errorBody()?.string()
             Log.d(

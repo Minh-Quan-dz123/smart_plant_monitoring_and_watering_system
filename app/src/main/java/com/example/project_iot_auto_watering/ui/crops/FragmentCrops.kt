@@ -363,8 +363,6 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
     override fun getIdDevice(idDevice: String) {
         val idGarden = gardenViewModel.idGarden
         val esp = EspDeviceRequest(idDevice)
-        val tokenAuth = requireContext().getSharedPreferences("Auth", Context.MODE_PRIVATE)
-            .getString("token", "").toString()
         gardenViewModel.updateDevice(idGarden, esp, tokenAuth) { m ->
             Toast.makeText(requireContext(), m, Toast.LENGTH_SHORT).show()
         }

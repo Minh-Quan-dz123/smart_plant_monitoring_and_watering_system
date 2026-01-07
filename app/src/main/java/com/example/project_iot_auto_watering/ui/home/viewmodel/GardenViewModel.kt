@@ -31,8 +31,8 @@ class GardenViewModel(private val gardenRepository: GardenRepository) : ViewMode
     var idGarden = -1
     var espId = ""
 
-    private var _modeIrrigation = MutableLiveData<String>()
-    val modeIrrigation: LiveData<String> = _modeIrrigation
+    private var _modeIrrigation = MutableLiveData<String?>()
+    val modeIrrigation: LiveData<String?> = _modeIrrigation
 
     private var _pumpStatus = MutableLiveData<PumpStatus>()
     val pumpStatus: LiveData<PumpStatus> = _pumpStatus

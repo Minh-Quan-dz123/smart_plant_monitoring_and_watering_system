@@ -35,17 +35,22 @@ class AuthViewModel(val authRepository: AuthRepository) : ViewModel() {
 
     fun register(nameUser: String, email: String, password: String, callBack: (String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = authRepository.register(nameUser, email, password)
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    username = nameUser
-                    Log.d("DEBUG", "Đăng ký thành công!")
-                    callBack("success")
-                } else {
-                    val errorMessage = response.errorBody()?.string()
-                    Log.d("DEBUG", "$errorMessage")
-                    callBack("$errorMessage")
+            try{
+                val response = authRepository.register(nameUser, email, password)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        username = nameUser
+                        Log.d("DEBUG", "Đăng ký thành công!")
+                        callBack("success")
+                    } else {
+                        val errorMessage = response.errorBody()?.string()
+                        Log.d("DEBUG", "$errorMessage")
+                        callBack("$errorMessage")
+                    }
                 }
+            }
+            catch (e: Exception){
+                Log.d("DEBUG","loi server")
             }
         }
     }
