@@ -17,6 +17,8 @@ extern const char* clientId;
 extern WiFiClientSecure espClient;
 extern MqttClient client;
 
+extern bool emerTurnOff;
+
 // khai báo hàm
 void setupMQTT();
 void callback(char *topic, byte* payload, unsigned int length);// hàm xử lý callback
@@ -26,6 +28,6 @@ void reconnectMQTT(); // hàm reconnect với hivemq
 void sendDataToHiveMQ(float temperature, float humidity, float soil);
 
 // gửi log
-void writeLog(uint8_t garden_id, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint8_t time);
+void writeLog(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint16_t time);
 
 #endif

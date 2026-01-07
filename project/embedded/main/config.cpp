@@ -28,7 +28,8 @@ void beginConfig()
   setupMQTT();
 
   // 7 đặt con trỏ
-  setPointer();
+  setPointer(0);setPointer(1);setPointer(2);
+  initWatering();
 
 
 }
