@@ -3,7 +3,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   const loginForm = document.getElementById("loginForm");
-  // Lưu ý: ID trong HTML vẫn là "username", nhưng ta coi nó là ô nhập Email
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   const errorMessage = document.getElementById("error-message");
@@ -13,8 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault(); 
     errorMessage.textContent = "";
 
-    // --- SỬA LỖI TẠI ĐÂY (QUAN TRỌNG) ---
-    // Bạn phải khai báo biến tên là "email" để dùng được ở bên dưới
     const email = usernameInput.value; 
     const password = passwordInput.value;
 
@@ -26,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         // Gửi dữ liệu đi với key là "email"
         body: JSON.stringify({ 
-          email: email,      // Biến 'email' đã được khai báo ở trên
+          email: email,     
           password: password 
         }), 
       });
@@ -54,4 +51,5 @@ document.addEventListener("DOMContentLoaded", () => {
       errorMessage.textContent = "Không thể kết nối đến máy chủ. Vui lòng thử lại.";
     }
   });
+
 });
