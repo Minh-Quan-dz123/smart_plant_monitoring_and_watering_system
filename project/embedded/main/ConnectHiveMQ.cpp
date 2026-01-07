@@ -171,7 +171,38 @@ void callback(int messageSize)
     // đầu vào là thứ giờ phút giây => cần lưu => ngày giờ phút giây
     Schedule x;
     nowTime = rtc.now();
-    x.repeat =  (int8_t)doc["repeat"];
+
+    ///--
+    if (doc["repeat"].is<int>()) 
+    {
+      // Server gửi số
+      x.repeat = doc["repeat"].as<int>();
+    }
+    else if (doc["repeat"].is<const char*>()) 
+    {
+      // Server gửi chuỗi
+      const char* repeatStr = doc["repeat"];
+
+      if (strcmp(repeatStr, "once") == 0) {
+        x.repeat = 0;
+      } 
+      else if (strcmp(repeatStr, "daily") == 0) {
+        x.repeat = 1;
+      } 
+      else if (strcmp(repeatStr, "weekly") == 0) {
+        x.repeat = 2;
+      } 
+      else {
+        Serial.println("repeat khong hop le");
+        x.repeat = 0; // mặc định an toàn
+      }
+    }
+    else {
+      Serial.println("repeat sai kieu du lieu");
+      x.repeat = 0;
+    }
+
+    ///
     x.year = nowTime.year();
     x.month = nowTime.month();
 
@@ -225,7 +256,37 @@ void callback(int messageSize)
     uint8_t x = doc["dayOfWeek"];
     x = (uint8_t)nowTime.day() - (uint8_t)nowTime.dayOfTheWeek() + x;
 
-    deleteSchedule((int8_t)doc["repeat"], x,(uint8_t)doc["hour"], (uint8_t)doc["minute"], (uint8_t)doc["second"]);
+    uint8_t re=0;
+    if (doc["repeat"].is<int>()) 
+    {
+      // Server gửi số
+      re = doc["repeat"].as<int>();
+    }
+    else if (doc["repeat"].is<const char*>()) 
+    {
+      // Server gửi chuỗi
+      const char* repeatStr = doc["repeat"];
+
+      if (strcmp(repeatStr, "once") == 0) {
+        re = 0;
+      } 
+      else if (strcmp(repeatStr, "daily") == 0) {
+        re = 1;
+      } 
+      else if (strcmp(repeatStr, "weekly") == 0) {
+        re = 2;
+      } 
+      else {
+        Serial.println("repeat khong hop le");
+        re = 0; // mặc định an toàn
+      }
+    }
+    else {
+      Serial.println("repeat sai kieu du lieu");
+      re = 0;
+    }
+
+    deleteSchedule(re ,(uint8_t)doc["hour"], (uint8_t)doc["minute"], (uint8_t)doc["second"]);
   }
 
   // topic 9 connect cmd
