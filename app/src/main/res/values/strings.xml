@@ -127,4 +127,5 @@
     <string name="complete">completed</string>
     <string name="failed">failed</string>
     <string name="cancelled">cancelled</string>
+    <string name="pumped">Cây đã ở điều kiện thích hợp!</string>
 </resources>

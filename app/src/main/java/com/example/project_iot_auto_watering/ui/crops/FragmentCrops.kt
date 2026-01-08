@@ -422,6 +422,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun startIrrigation(gardenId:Int){
         binding.progressBar.visibility=View.VISIBLE
         Toast.makeText(requireContext(),"Vui lòng đợi máy bơm bật ", Toast.LENGTH_SHORT).show()
@@ -439,7 +440,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                 stateWatering = true
                 setViewPumpOn()
             }
-            binding.tvState.text = m
+            binding.tvState.text = "Đang tưới"
             startPumpNotification(gardenId)
             Toast.makeText(requireContext(),"Vui lòng nhập thời gian hợp lệ", Toast.LENGTH_SHORT).show()
             binding.img1.setOnClickListener(this)
@@ -459,6 +460,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         requireContext().stopService(intent)
     }
 
+
     private fun startRunDuration(totalSecond:Int,tvCountDown: TextView){
         val totalMillis=totalSecond*1000L
         if(totalSecond>3600){
@@ -467,6 +469,9 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
                 @SuppressLint("SetTextI18n")
                 override fun onFinish() {
                     tvCountDown.text="00:00"
+                    //logic tạm thời
+                    binding.tvState.text = requireContext().getString(R.string.pumped)
+                    setViewPumpOff()
                 }
 
                 override fun onTick(millisUntilFinished: Long) {
