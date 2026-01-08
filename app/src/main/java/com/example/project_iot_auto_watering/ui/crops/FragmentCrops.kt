@@ -433,7 +433,8 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
         ) { m ->
             binding.progressBar.visibility=View.GONE
             Toast.makeText(requireContext(), m, Toast.LENGTH_SHORT).show()
-            if (m != "") {
+            //chỗ này backend với vi điều khiển chưa có response
+            if (m == "") {
                 startRunDuration(durationManual*60,binding.tvCountDown)
                 stateWatering = true
                 setViewPumpOn()
