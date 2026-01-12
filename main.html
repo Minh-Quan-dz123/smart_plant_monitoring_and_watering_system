@@ -79,14 +79,28 @@
       </div>
 
       <div id="LichTuoiModal" class="modal">
-        <div class="modal-content">
-          <h2>Tạo Lịch Tưới Mới</h2>
+        <div class="modal-content" style="max-width: 500px;">
+          <h2 style="text-align: center; color: #45b9c6; margin-bottom: 20px;">Tạo Lịch Tưới Mới</h2>
+          
           <form id="LichTuoiForm">
             <label>Giờ tưới:</label>
             <input type="time" id="wateringTime" required>
+            
             <label>Thời lượng (giây):</label>
-            <input type="number" id="wateringSecond" min="1" max="3600" placeholder="VD: 60" required><br><br>
-            <div style="text-align: left; display: grid; grid-template-columns: 1fr 1fr;">
+            <input type="number" id="wateringSecond" min="1" max="3600" placeholder="VD: 60" required>
+            
+            <label style="margin-top: 10px; display: block;">Lặp lại vào:</label>
+            
+            <div class="schedule-grid">
+                <label class="highlight-option no-repeat">
+                    <input type="radio" name="day" value="Once"> 
+                    <span>🚫 Không lặp lại</span>
+                </label>
+                <label class="highlight-option everyday">
+                    <input type="radio" name="day" value="Everyday"> 
+                    <span>🔄 Hàng ngày</span>
+                </label>
+
                 <label><input type="radio" name="day" value="Mon" required> Thứ 2</label>
                 <label><input type="radio" name="day" value="Tue"> Thứ 3</label>
                 <label><input type="radio" name="day" value="Wed"> Thứ 4</label>
@@ -95,9 +109,11 @@
                 <label><input type="radio" name="day" value="Sat"> Thứ 7</label>
                 <label><input type="radio" name="day" value="Sun"> Chủ nhật</label>
             </div>
-            <br>
-            <button type="submit">Lưu Lịch</button>
-            <button type="button" onclick="cancelLichTuoi()" style="background-color: #aaa;">Hủy</button>
+
+            <div class="modal-actions">
+                <button type="button" onclick="cancelLichTuoi()" style="background-color: #95a5a6; color: white;">Hủy bỏ</button>
+                <button type="submit" style="background-color: #45b9c6; color: white;">Lưu Lịch</button>
+            </div>
           </form>
         </div>
       </div>
@@ -215,6 +231,7 @@
             <div style="border-left: 1px solid #ddd; height: 40px; margin: 0 20px;"></div>
             <select id="irrigationModeSelect" onchange="handleModeChange()">
                 <option value="" disabled selected>-- Đổi chế độ --</option>
+                <option value="schedule">Tưới theo lịch (Schedule)</option>
                 <option value="auto">Tự động (Auto)</option>
                 <option value="manual">Thủ công (Manual)</option>
                 <option value="off">Tắt (Off)</option>

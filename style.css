@@ -1,4 +1,4 @@
-/* style.css */
+
 
 * {
     box-sizing: border-box;
@@ -7,7 +7,7 @@
     font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
 }
 
-/* 1. LAYOUT CHÍNH  */
+
 body {
     margin: 0;
     padding: 0;
@@ -75,7 +75,7 @@ body {
     font-weight: bold;
 }
 
-/* 3. CỘT PHẢI (NỘI DUNG) */
+
 .right {
     flex: 1;
     min-width: 0; 
@@ -93,7 +93,6 @@ body {
     margin-bottom: 25px;
 }
 
-/* --- NÚT ĐĂNG XUẤT (GÓC PHẢI) --- */
 .logout-btn {
     position: absolute;
     top: 30px;
@@ -115,7 +114,6 @@ body {
     transform: translateX(2px);
 }
 
-/* --- ĐỒNG HỒ  --- */
 #timeDisplay {
     position: absolute;
     top: 30px;
@@ -183,11 +181,64 @@ body.auth-page { display: flex; align-items: center; justify-content: center; he
 .page input { margin-bottom: 15px; background: #fafafa; }
 .page button[type="submit"] { background: linear-gradient(135deg, #45b9c6, #27ae60); color: white; width: 100%; margin-top: 10px; }
 
-/* CSS TỪ ĐIỂN */
+
 .suggestions-list { list-style: none; padding: 0; margin: 5px 0 0; position: absolute; width: 100%; background: white; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 1000; display: none; max-height: 200px; overflow-y: auto; }
 .suggestions-list li { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; text-align: left; }
 .suggestions-list li:hover { background: #e0f7fa; }
 .plant-detail-card { background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #27ae60; margin-top: 15px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-/* Mode Control */
+
 .mode-control { background: white; padding: 20px; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px; }
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px 15px; 
+    margin-bottom: 25px;
+    margin-top: 5px;
+    text-align: left;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.schedule-grid label {
+    display: flex;      
+    align-items: center; 
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    margin: 0; 
+}
+
+.schedule-grid input[type="radio"] {
+    width: 18px !important;  
+    height: 18px !important;
+    margin: 0 10px 0 0 !important; 
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: none !important; 
+}
+
+.highlight-option span {
+    font-weight: bold;
+}
+.highlight-option.no-repeat span { color: #e74c3c; } 
+.highlight-option.everyday span { color: #27ae60; }  
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end; 
+    gap: 15px;
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.modal-actions button {
+    width: auto;     
+    min-width: 120px; 
+    margin: 0;
+}
