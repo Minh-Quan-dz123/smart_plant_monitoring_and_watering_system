@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_bgr_crops"
         android:ellipsize="end"
-        android:hint="@string/minute"
+        android:hint="@string/second"
         android:maxLines="1"
         android:paddingHorizontal="10dp"
         android:paddingVertical="12dp"

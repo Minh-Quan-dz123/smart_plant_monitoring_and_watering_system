@@ -71,6 +71,8 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
 
     private var durationManual = 0
 
+    private var countDownTimer: CountDownTimer? = null
+
 
     //lấy kết quả từ camera/gallery
     private val takePictureLauncher =
@@ -436,7 +438,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
             Toast.makeText(requireContext(), m, Toast.LENGTH_SHORT).show()
             //chỗ này backend với vi điều khiển chưa có response
             if (m == "") {
-                startRunDuration(durationManual*60,binding.tvCountDown)
+                startRunDuration(durationManual,binding.tvCountDown)
                 stateWatering = true
                 setViewPumpOn()
             }
@@ -461,44 +463,26 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
     }
 
 
-    private fun startRunDuration(totalSecond:Int,tvCountDown: TextView){
-        val totalMillis=totalSecond*1000L
-        if(totalSecond>3600){
+    private fun startRunDuration(totalSeconds: Int, tvCountDown: TextView) {
 
-            val timer=object: CountDownTimer(totalMillis,1000){
-                @SuppressLint("SetTextI18n")
-                override fun onFinish() {
-                    tvCountDown.text="00:00"
-                    //logic tạm thời
-                    binding.tvState.text = requireContext().getString(R.string.pumped)
-                    setViewPumpOff()
-                }
+        val totalMillis = totalSeconds * 1000L
+        countDownTimer?.cancel()
 
-                override fun onTick(millisUntilFinished: Long) {
-                    val hours=millisUntilFinished/1000/3600
-                    val minutes=(millisUntilFinished/1000%3600)/60
-                    val seconds=millisUntilFinished/1000%60
+        countDownTimer = object : CountDownTimer(totalMillis, 1000) {
 
-                    tvCountDown.text= String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, seconds)
-                }
+            @SuppressLint("SetTextI18n")
+            override fun onFinish() {
+                tvCountDown.text = "00:00"
+                binding.tvState.text = getString(R.string.pumped)
+                setViewPumpOff()
             }
-            timer.start()
-        }
-        else{
-            val timer=object: CountDownTimer(totalMillis,1000){
-                @SuppressLint("SetTextI18n")
-                override fun onFinish() {
-                    tvCountDown.text="00:00"
-                }
-                override fun onTick(millisUntilFinished: Long) {
-                    val minutes=millisUntilFinished/1000/60
-                    val seconds=millisUntilFinished/1000%60
 
-                    tvCountDown.text= String.format(Locale.getDefault(),"%02d:%02d", minutes, seconds)
-                }
+            override fun onTick(millisUntilFinished: Long) {
+                tvCountDown.text = formatTime(millisUntilFinished)
             }
-            timer.start()
         }
+
+        countDownTimer?.start()
     }
 
     private fun setViewPumpOn(){
