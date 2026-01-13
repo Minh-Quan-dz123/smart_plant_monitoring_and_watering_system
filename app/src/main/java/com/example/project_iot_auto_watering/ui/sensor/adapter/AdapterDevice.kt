@@ -11,7 +11,7 @@ import com.example.project_iot_auto_watering.databinding.ItemSensorBinding
 
 class AdapterDevice(
     private val listEspDevice: List<DataEspAll>,
-    private val listener: (Boolean)->Unit
+    private val listener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<AdapterDevice.DeviceViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -28,11 +28,10 @@ class AdapterDevice(
         val esp = listEspDevice[position]
         holder.bind(esp)
         holder.binding.btnState.setOnClickListener {
-            Log.d("DEBUG-WIFI","click item")
-            if(esp.isConnected){
+            Log.d("DEBUG-WIFI", "click item")
+            if (esp.isConnected) {
                 listener(true)
-            }
-            else{
+            } else {
                 listener(false)
             }
         }
@@ -48,10 +47,10 @@ class AdapterDevice(
             binding.tvNameCrops.text = espDevice.garden.name
             binding.tvNameSensor.text = espDevice.espId
             binding.btnState.text = if (espDevice.isConnected) "On" else "Off"
-            if(espDevice.isConnected){
+            binding.tvStateWifi.text = if (espDevice.isConnected) "Đã kết nối" else "Chưa kết nối"
+            if (espDevice.isConnected) {
                 binding.imgWifi.setImageResource(R.drawable.icon_wifi)
-            }
-            else{
+            } else {
                 binding.imgWifi.setImageResource(R.drawable.icon_loss_connect)
             }
         }

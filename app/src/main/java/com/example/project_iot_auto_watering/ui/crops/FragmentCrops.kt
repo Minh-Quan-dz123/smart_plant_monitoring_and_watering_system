@@ -502,15 +502,11 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
     }
 
     private fun setViewPumpOn(){
-        val color = ContextCompat.getColor(requireContext(), R.color.blue_watering)
-        binding.img1.setBackgroundColor(color)
         binding.imgSprinkler.imageTintList =
-            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_watering))
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_wat    ering))
     }
 
     private fun setViewPumpOff(){
-        val color = ContextCompat.getColor(requireContext(), R.color.black_off)
-        binding.tvSprinkler.setTextColor(color)
         binding.imgSprinkler.imageTintList=
             ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.black_off))
     }
