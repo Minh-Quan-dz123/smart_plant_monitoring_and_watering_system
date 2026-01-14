@@ -487,7 +487,7 @@ class FragmentCrops : Fragment(), View.OnClickListener, AddDevice {
 
     private fun setViewPumpOn(){
         binding.imgSprinkler.imageTintList =
-            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_wat    ering))
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.blue_watering))
     }
 
     private fun setViewPumpOff(){
