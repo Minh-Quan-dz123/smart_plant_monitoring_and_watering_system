@@ -8,7 +8,7 @@ let ChonGardenId = null;
 let LichTuois = [];
 let allPlantsCache = []; 
 let globalManualDuration = 60;
-
+let sensorInterval = null;
 
 // 2. AUTHENTICATION (ĐĂNG NHẬP/ĐĂNG XUẤT) & HELPER
 
@@ -190,14 +190,18 @@ async function deleteGardenAPI(gardenId) {
   }
 }
 
-// --- 3.3 API SENSOR ---
+// 3.3 API SENSOR 
 async function getLatestSensorAPI(gardenId) {
     try {
-        const response = await fetch(`${BASE_API_URL}/garden/${gardenId}/sensor-data`, {
+      
+        const response = await fetch(`${BASE_API_URL}/sensor/garden/${gardenId}/latest`, {
             method: "GET",
             headers: getAuthHeaders()
         });
-        if (!response.ok) return null;
+        if (!response.ok) {
+        
+            return null; 
+        }
         return await response.json(); 
     } catch (error) {
         console.warn("Không lấy được dữ liệu cảm biến:", error);
@@ -312,27 +316,28 @@ async function deleteScheduleByIdAPI(id) {
 }
 
 // 4. LOGIC GIAO DIỆN CHÍNH (DASHBOARD & VƯỜN)
-
-// Hiển thị thông tin khi chọn Vườn
+// Hiển thị thông tin khi chọn Vườn 
 async function showEditCayOption(plantName, gardenId) {
-    // 1. Cập nhật tiêu đề
+   
     const dashboardTitle = document.querySelector('.right h1');
     if(dashboardTitle) dashboardTitle.textContent = `Vườn: ${plantName}`;
     const tenCayDiv = document.getElementById('ChonTenCay');
     if(tenCayDiv) tenCayDiv.textContent = `Đang chọn: ${plantName}`;
-
     console.log(`Đang tải dữ liệu cho vườn ID: ${gardenId}...`);
 
-    // 2. Đồng bộ trạng thái Bơm & Chế độ
     await syncSystemStatus(); 
-
-    // 3. Lấy dữ liệu Cảm biến mới nhất
-    const sensorData = await getLatestSensorAPI(gardenId);
-    if (sensorData) {
-        updateSensorUI(sensorData);
-    } else {
-        updateSensorUI({ temperature: '--', airHumidity: '--', soilMoisture: '--' });
-    }
+    if (sensorInterval) clearInterval(sensorInterval);
+    const fetchAndShowSensor = async () => {
+        const sensorData = await getLatestSensorAPI(gardenId);
+        if (sensorData) {
+            updateSensorUI(sensorData);
+        } else {
+            
+            // updateSensorUI({ temperature: '--', airHumidity: '--', soilMoisture: '--' });
+        }
+    };
+    await fetchAndShowSensor();
+    sensorInterval = setInterval(fetchAndShowSensor, 3000);
 }
 
 // Cập nhật giao diện cảm biến
@@ -574,6 +579,7 @@ async function XoaVuonDaChon() {
     if (!confirm("Bạn chắc chắn muốn xóa vườn này?")) return;
     try {
         await deleteGardenAPI(ChonGardenId); 
+        if (sensorInterval) clearInterval(sensorInterval);
         alert("Đã xóa vườn!");
         DongEditVuon();
         UpdateDanhSachVuonUI();
